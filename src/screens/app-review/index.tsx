@@ -54,7 +54,7 @@ const styles = StyleSheet.create((theme, rt) => ({
         const backgroundByResponse = {
             bad: theme.colors.red[500],
             not_bad: theme.colors.amber[400],
-            good: theme.colors.lime[400],
+            good: theme.colors.accent,
         } satisfies Record<AppReviewResponse, string>;
 
         return {
@@ -122,7 +122,7 @@ const styles = StyleSheet.create((theme, rt) => ({
         const backgroundByResponse = {
             bad: theme.colors.red[600],
             not_bad: theme.colors.amber[500],
-            good: theme.colors.lime[500],
+            good: theme.colors.accentStrong,
         } satisfies Record<AppReviewResponse, string>;
 
         return {

@@ -41,3 +41,7 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# RepDB images: in-app use only, must not be redistributed as a dataset.
+# Download them with tools/match_exercise_images.py --download
+/assets/exercises/

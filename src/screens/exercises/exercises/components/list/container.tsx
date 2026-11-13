@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { StyleSheet } from 'react-native-unistyles';
 import { useTranslation } from 'react-i18next';
 
-import { PreviewThumbnail } from '@/components/layout/preview';
+import { PreviewThumbnail, PreviewMedia } from '@/components/layout/preview';
 
 import { ExerciseList } from './index';
 import { ExerciseListItemComponent } from '../card';
@@ -240,10 +240,10 @@ export const ExercisesListContainer: FC<ExercisesListContainerProps> = ({
         [activeFilterCount, analyticsWorkoutId, query, track],
     );
 
-    const handleGifPreviewOpen = useCallback((name: string, gifFilename: string) => {
+    const handleGifPreviewOpen = useCallback((name: string, media: PreviewMedia) => {
         router.navigate({
             pathname: '/preview',
-            params: { name, gifFilename },
+            params: { name, ...media },
         });
     }, []);
 
@@ -253,6 +253,7 @@ export const ExercisesListContainer: FC<ExercisesListContainerProps> = ({
                 <PreviewThumbnail
                     name={exerciseItem.exercise.name}
                     gifFilename={exerciseItem.exercise.gifFilename}
+                    imageUri={exerciseItem.exercise.imageUri}
                     onOpen={handleGifPreviewOpen}
                     analyticsSurface={mode === 'browse' ? 'exercise_library' : 'workout_select'}
                     analyticsWorkoutId={analyticsWorkoutId}

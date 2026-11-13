@@ -16,6 +16,7 @@ import { WorkoutItem } from '../../types';
 import { WorkoutSelect } from '@/db/schema';
 import { ExerciseSet } from '../exercise-set';
 import { isRestFinalized } from '@/helpers/rest';
+import { ExerciseNotes } from '@/components/layout/exercise-notes';
 
 interface ExerciseProps {
     item: WorkoutItem;
@@ -43,7 +44,7 @@ const styles = StyleSheet.create((theme, rt) => ({
     },
     orderTitle: (isActive: boolean, isCompleted: boolean) => ({
         fontWeight: theme.fontWeight.semibold.fontWeight,
-        color: isActive ? theme.colors.lime[500] : theme.colors.typography,
+        color: isActive ? theme.colors.accentStrong : theme.colors.typography,
         opacity: isActive || isCompleted ? 1 : 0.45,
     }),
     exerciseContainer: {
@@ -194,6 +195,7 @@ const ExerciseContent: FC<{
                         </Text>
                     </Box>
                 ) : null}
+                <ExerciseNotes exercise={item.exercise} variant="compact" />
                 {item.sets && item.sets.length > 0 ? (
                     <HStack style={styles.setsContainer}>
                         {item.sets.map((set) => (

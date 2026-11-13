@@ -4,6 +4,7 @@ export const Locale = {
     ZH: 'zh',
     ES: 'es',
     HI: 'hi',
+    FR: 'fr',
 };
 
 export const localeNames = {
@@ -12,8 +13,16 @@ export const localeNames = {
     [Locale.ZH]: '中文',
     [Locale.ES]: 'Español',
     [Locale.HI]: 'हिन्दी',
+    [Locale.FR]: 'Français',
 };
 
 export const defaultLocale = Locale.EN;
 
-export const supportedLanguages = [Locale.EN, Locale.RU, Locale.ZH, Locale.ES, Locale.HI];
+export const supportedLanguages = [
+    Locale.EN,
+    Locale.FR,
+    Locale.RU,
+    Locale.ZH,
+    Locale.ES,
+    Locale.HI,
+];

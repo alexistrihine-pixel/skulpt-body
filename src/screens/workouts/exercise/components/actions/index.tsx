@@ -15,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 
 import { Box } from '@/components/primitives/box';
+import { RestBar } from '@/components/overlays/rest-bar';
 import { HStack } from '@/components/primitives/hstack';
 import {
     useCreateExerciseSet,
@@ -80,7 +81,7 @@ const styles = StyleSheet.create((theme, rt) => ({
         alignItems: 'center',
     },
     mainButtonContainer: {
-        backgroundColor: theme.colors.lime[400],
+        backgroundColor: theme.colors.accent,
         width: theme.space(16),
         height: theme.space(16),
     },
@@ -388,6 +389,7 @@ export const Actions: FC<ActionsProps> = ({
             style={styles.container}
             onLayout={(e) => setActionsHeight(Math.round(e.nativeEvent.layout.height))}
         >
+            <RestBar currentWorkoutExerciseId={workoutExerciseId} />
             <HStack style={styles.wrapper}>
                 <Box style={[styles.actionContainer, styles.leftContainer]}>
                     <Pressable onPress={handlePrevExercise} disabled={isPrevDisabled}>

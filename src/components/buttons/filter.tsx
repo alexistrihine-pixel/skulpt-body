@@ -31,7 +31,7 @@ const styles = StyleSheet.create((theme) => ({
         height: theme.space(2),
         width: theme.space(2),
         borderRadius: theme.radius.full,
-        backgroundColor: theme.colors.lime[500],
+        backgroundColor: theme.colors.accentStrong,
     },
 }));
 

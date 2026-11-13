@@ -13,7 +13,7 @@ import { useSupersetEditStore } from '@/stores/superset-edit';
 const styles = StyleSheet.create((theme) => ({
     container: {
         paddingHorizontal: theme.space(4),
-        backgroundColor: theme.colors.lime[400],
+        backgroundColor: theme.colors.accent,
         paddingBottom: theme.space(5),
     },
     stateContainer: {

@@ -53,13 +53,13 @@ const useWorkoutExerciseScreen = () => {
             headerRight: () => (
                 <ActionsButton
                     onPressHandler={handleActions}
-                    backgroundColor={theme.colors.lime[500]}
+                    backgroundColor={theme.colors.accentStrong}
                     iconColor={theme.colors.neutral[950]}
                 />
             ),
             cardStyle: {
                 ...options.cardStyle,
-                backgroundColor: theme.colors.lime[400],
+                backgroundColor: theme.colors.accent,
             },
         },
     };

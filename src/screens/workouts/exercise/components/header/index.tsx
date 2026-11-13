@@ -12,7 +12,7 @@ import { ChevronRight, ChevronsUp } from 'lucide-react-native';
 import { Pressable } from '@/components/primitives/pressable';
 import { router } from 'expo-router';
 import { getPrimaryAnchorMuscleValue } from '@/constants/muscles';
-import { PreviewThumbnail } from '@/components/layout/preview';
+import { PreviewThumbnail, PreviewMedia } from '@/components/layout/preview';
 
 interface HeaderProps {
     exerciseInfo: {
@@ -24,7 +24,7 @@ interface HeaderProps {
 const styles = StyleSheet.create((theme, rt) => ({
     container: {
         paddingHorizontal: theme.space(4),
-        backgroundColor: theme.colors.lime[400],
+        backgroundColor: theme.colors.accent,
         paddingBottom: theme.space(5),
         alignItems: 'center',
     },
@@ -84,7 +84,7 @@ const styles = StyleSheet.create((theme, rt) => ({
     guideButton: {
         height: theme.space(11),
         width: theme.space(11),
-        backgroundColor: theme.colors.lime[500],
+        backgroundColor: theme.colors.accentStrong,
         borderRadius: theme.radius.full,
         justifyContent: 'center',
         alignItems: 'center',
@@ -96,7 +96,7 @@ const styles = StyleSheet.create((theme, rt) => ({
     },
     exerciseLinkWrapper: {
         flexDirection: 'row',
-        backgroundColor: theme.colors.lime[500],
+        backgroundColor: theme.colors.accentStrong,
         paddingRight: theme.space(1),
         paddingLeft: theme.space(2.5),
         paddingVertical: theme.space(0.25),
@@ -144,10 +144,10 @@ export const Header: FC<HeaderProps> = ({ exerciseInfo }) => {
         });
     }, [exerciseId]);
 
-    const handlePreviewOpen = useCallback((name: string, gifFilename: string) => {
+    const handlePreviewOpen = useCallback((name: string, media: PreviewMedia) => {
         router.navigate({
             pathname: '/preview',
-            params: { name, gifFilename },
+            params: { name, ...media },
         });
     }, []);
 
@@ -171,6 +171,7 @@ export const Header: FC<HeaderProps> = ({ exerciseInfo }) => {
                     <PreviewThumbnail
                         name={exerciseInfo?.exercise.name ?? ''}
                         gifFilename={exerciseInfo?.exercise.gifFilename}
+                        imageUri={exerciseInfo?.exercise.imageUri}
                         onOpen={handlePreviewOpen}
                         analyticsSurface="active_workout"
                         analyticsWorkoutId={exerciseInfo?.workoutExercise.workoutId}

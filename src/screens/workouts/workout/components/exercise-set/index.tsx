@@ -13,8 +13,7 @@ import { WorkoutItem } from '../../types';
 
 const styles = StyleSheet.create((theme, rt) => ({
     setContainer: (isActive: boolean, isTimerActive: boolean) => ({
-        backgroundColor:
-            isActive || isTimerActive ? theme.colors.lime[400] : theme.colors.foreground,
+        backgroundColor: isActive || isTimerActive ? theme.colors.accent : theme.colors.foreground,
         paddingVertical: theme.space(0.25),
         paddingHorizontal: theme.space(1.5),
         borderRadius: theme.radius.lg,

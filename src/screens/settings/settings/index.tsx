@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Platform, Share } from 'react-native';
+import { Alert, Linking, Platform, Share } from 'react-native';
 import { router } from 'expo-router';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useTranslation } from 'react-i18next';
@@ -93,6 +93,16 @@ const styles = StyleSheet.create((theme, rt) => ({
     versionText: {
         color: theme.colors.neutral[500],
         fontSize: theme.fontSize.sm.fontSize,
+    },
+    credits: {
+        alignItems: 'center',
+        marginTop: theme.space(3),
+        gap: theme.space(1),
+    },
+    creditsLink: {
+        color: theme.colors.neutral[400],
+        fontSize: theme.fontSize.sm.fontSize,
+        textDecorationLine: 'underline',
     },
     fieldContainer: {
         gap: theme.space(3),
@@ -431,6 +441,24 @@ const SettingsScreen = () => {
                 <Text style={styles.versionText}>{appVersion}</Text>
                 <Text style={styles.versionText}>({buildVersion})</Text>
             </HStack>
+            <VStack style={styles.credits}>
+                <Text
+                    style={styles.creditsLink}
+                    accessibilityRole="link"
+                    onPress={() => Linking.openURL('https://repdb.co')}
+                >
+                    Exercise data by RepDB (repdb.co)
+                </Text>
+                <Text
+                    style={styles.creditsLink}
+                    accessibilityRole="link"
+                    onPress={() =>
+                        Linking.openURL('https://github.com/hasaneyldrm/exercises-dataset')
+                    }
+                >
+                    {t('settings.catalogCredit', { ns: 'screens' })}
+                </Text>
+            </VStack>
         </ScrollView>
     );
 };

@@ -87,7 +87,7 @@ const styles = StyleSheet.create((theme, rt) => ({
         right: 0,
         bottom: 0,
         height: theme.space(1),
-        backgroundColor: visible ? theme.colors.lime[500] : 'transparent',
+        backgroundColor: visible ? theme.colors.accentStrong : 'transparent',
     }),
     text: {
         borderBottomWidth: 0,

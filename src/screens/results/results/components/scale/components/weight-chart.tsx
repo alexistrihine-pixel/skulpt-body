@@ -404,7 +404,7 @@ const WeightChart = ({ timeline, numberFormatter, formatValue, emptyText }: Weig
     const currentPageTicks = currentPage?.xAxisTicks ?? [];
     const currentPageLeftInset = currentPage?.leftInset ?? 0;
     const currentPageRightInset = currentPage?.rightInset ?? 0;
-    const chartColor = theme.colors.lime[400];
+    const chartColor = theme.colors.accent;
     const chartGuideColor = withAlpha(chartColor, CHART_GUIDE_OPACITY);
 
     return (

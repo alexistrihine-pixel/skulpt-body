@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 
 import { Box } from '@/components/primitives/box';
+import { RestBar } from '@/components/overlays/rest-bar';
 import { WorkoutSelect } from '@/db/schema';
 import { Button } from '@/components/buttons/base';
 import { CreateButton } from '@/components/buttons/create';
@@ -116,6 +117,7 @@ export const Actions: FC<ActionsProps> = ({ workout }) => {
 
     return (
         <Box style={styles.bottomActionsContainer}>
+            <RestBar />
             <HStack>
                 <Box style={[styles.actionContainer, styles.leftContainer]}>
                     <CreateButton onPressHandler={handleExerciseAdd} iconSize={theme.space(6)} />

@@ -152,6 +152,7 @@ module.exports = {
     locales: {
         en: './src/locale/translations/meta/en.json',
         es: './src/locale/translations/meta/es.json',
+        fr: './src/locale/translations/meta/fr.json',
         hi: './src/locale/translations/meta/hi.json',
         ru: './src/locale/translations/meta/ru.json',
         zh: './src/locale/translations/meta/zh.json',
@@ -162,6 +163,15 @@ module.exports = {
             : './assets/images/icon.png',
     plugins: [
         'expo-sqlite',
+        [
+            'expo-image-picker',
+            {
+                photosPermission: 'Skulpt uses your photos to illustrate your exercises.',
+                cameraPermission:
+                    'Skulpt uses the camera to take photos of your exercises and machines.',
+                microphonePermission: false,
+            },
+        ],
         'expo-audio',
         'expo-asset',
         'expo-mail-composer',
@@ -207,8 +217,8 @@ module.exports = {
             'expo-localization',
             {
                 supportedLocales: {
-                    ios: ['en', 'es', 'hi', 'ru', 'zh'],
-                    android: ['en', 'es', 'hi', 'ru', 'zh'],
+                    ios: ['en', 'es', 'fr', 'hi', 'ru', 'zh'],
+                    android: ['en', 'es', 'fr', 'hi', 'ru', 'zh'],
                 },
             },
         ],

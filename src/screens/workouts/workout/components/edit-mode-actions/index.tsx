@@ -34,7 +34,7 @@ const styles = StyleSheet.create((theme, rt) => ({
         alignItems: 'center',
     },
     customStartButtonContainer: {
-        backgroundColor: theme.colors.lime[400],
+        backgroundColor: theme.colors.accent,
     },
     customStartButtonText: {
         fontSize: theme.fontSize.lg.fontSize,

@@ -17,11 +17,12 @@ import { useActionsStore } from '@/stores/actions';
 import { Rest } from '../rest';
 import { formatClockSecondsCompact } from '@/helpers/times';
 import { TimeDurationInput } from '@/components/primitives/time-duration-input';
-import { WeightInput } from '@/components/primitives/weight-input';
-import { RepsInput } from '@/components/primitives/reps-input';
+import { KeypadField } from '@/components/primitives/keypad-field';
+import { formatSet } from '@/helpers/workouts';
 import { DistanceInput } from '@/components/primitives/distance-input';
 import { normalizeSetType } from '@/helpers/set-type';
 import { useTranslation } from 'react-i18next';
+import { VStack } from '@/components/primitives/vstack';
 
 interface SetItemProps {
     set: ExerciseSetSelect;
@@ -35,6 +36,8 @@ interface SetItemProps {
     restingSetId: string | null;
     activeWorkTimerRemainingSeconds: number | null;
     activeStopwatchElapsedSeconds: number | null;
+    /** Same set in the last completed workout with this exercise ("Previous" value). */
+    previousSet?: ExerciseSetSelect | null;
 }
 
 interface RightActionProps {
@@ -46,9 +49,7 @@ interface RightActionProps {
 const styles = StyleSheet.create((theme, rt) => ({
     set: (active: boolean, isTimerActive: boolean) => ({
         backgroundColor: active
-            ? rt.themeName === 'dark'
-                ? theme.colors.lime[900]
-                : theme.colors.lime[100]
+            ? theme.colors.accentMuted
             : isTimerActive
               ? theme.colors.foreground
               : theme.colors.background,
@@ -63,9 +64,7 @@ const styles = StyleSheet.create((theme, rt) => ({
     },
     orderWrapper: (active: boolean, isTimerActive: boolean) => ({
         backgroundColor: active
-            ? rt.themeName === 'dark'
-                ? theme.colors.lime[900]
-                : theme.colors.lime[100]
+            ? theme.colors.accentMuted
             : isTimerActive
               ? theme.colors.foreground
               : theme.colors.background,
@@ -84,11 +83,21 @@ const styles = StyleSheet.create((theme, rt) => ({
         fontSize: theme.fontSize.sm.fontSize,
         color: theme.colors.neutral[400],
     },
-    setContainer: {
+    setColumn: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    setContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
         gap: theme.space(2),
+    },
+    previous: {
+        fontSize: theme.fontSize.xs.fontSize,
+        lineHeight: theme.fontSize.xs.lineHeight,
+        color: theme.colors.neutral[500],
+        marginTop: theme.space(0.5),
     },
     separator: {
         marginLeft: theme.space(4),
@@ -106,7 +115,7 @@ const styles = StyleSheet.create((theme, rt) => ({
         gap: theme.space(1),
     },
     input: (focused: boolean, active: boolean, completed: boolean, isTimerActive: boolean) => ({
-        color: active ? theme.colors.lime[500] : theme.colors.typography,
+        color: active ? theme.colors.accentStrong : theme.colors.typography,
         fontSize: theme.fontSize['3xl'].fontSize,
         lineHeight: theme.fontSize['3xl'].lineHeight,
         fontWeight: theme.fontWeight.medium.fontWeight,
@@ -115,11 +124,9 @@ const styles = StyleSheet.create((theme, rt) => ({
         borderBottomWidth: theme.space(1),
         opacity: active || completed ? 1 : 0.3,
         borderBottomColor: focused
-            ? theme.colors.lime[500]
+            ? theme.colors.accentStrong
             : active
-              ? rt.themeName === 'dark'
-                  ? theme.colors.lime[900]
-                  : theme.colors.lime[100]
+              ? theme.colors.accentMuted
               : isTimerActive
                 ? theme.colors.foreground
                 : theme.colors.background,
@@ -174,8 +181,9 @@ const SetItemComponent = ({
     restingSetId,
     activeWorkTimerRemainingSeconds,
     activeStopwatchElapsedSeconds,
+    previousSet,
 }: SetItemProps) => {
-    const { t } = useTranslation(['common']);
+    const { t } = useTranslation(['common', 'screens']);
     const { gesture } = useItemContext();
 
     const { mutateAsync: updateSet } = useUpdateExerciseSet();
@@ -226,13 +234,15 @@ const SetItemComponent = ({
                 if (field === 'weight') {
                     return (
                         <HStack key={keyOf(set.id, 'weight')} style={styles.tackingContainer}>
-                            <WeightInput
+                            <KeypadField
+                                setId={set.id}
+                                field="weight"
                                 value={set.weight}
-                                editable={true}
+                                placeholder={
+                                    previousSet?.weight != null ? String(previousSet.weight) : null
+                                }
                                 style={styles.input(false, isActive, isCompleted, isTimerActive)}
-                                onCommitValue={(value) => {
-                                    updateSet({ id: set.id, updates: { weight: value } });
-                                }}
+                                accessibilityLabel={`${t('training.keypad.weight', { ns: 'screens' })} ${index + 1}`}
                             />
                             <Text style={styles.sepText}>
                                 {exerciseInfo?.exercise?.weightUnits || ''}
@@ -244,13 +254,15 @@ const SetItemComponent = ({
                 if (field === 'reps') {
                     return (
                         <HStack key={keyOf(set.id, 'reps')}>
-                            <RepsInput
+                            <KeypadField
+                                setId={set.id}
+                                field="reps"
                                 value={set.reps}
-                                editable={true}
+                                placeholder={
+                                    previousSet?.reps != null ? String(previousSet.reps) : null
+                                }
                                 style={styles.input(false, isActive, isCompleted, isTimerActive)}
-                                onCommitValue={(value) => {
-                                    updateSet({ id: set.id, updates: { reps: value } });
-                                }}
+                                accessibilityLabel={`${t('training.keypad.reps', { ns: 'screens' })} ${index + 1}`}
                             />
                         </HStack>
                     );
@@ -342,7 +354,18 @@ const SetItemComponent = ({
         updateSet,
         activeStopwatchElapsedSeconds,
         activeWorkTimerRemainingSeconds,
+        previousSet,
+        index,
+        t,
     ]);
+
+    const previousText =
+        previousSet && exerciseInfo?.exercise
+            ? formatSet(exerciseInfo.exercise, previousSet).replace(/ x /g, ' × ')
+            : '';
+    const previousLabel = previousText
+        ? `${t('training.previous', { ns: 'screens' })} · ${previousText}`
+        : null;
 
     const interspersedFields = useMemo(() => {
         const result = [];
@@ -389,7 +412,10 @@ const SetItemComponent = ({
                             </Box>
                         </Pressable>
                     </Box>
-                    <HStack style={styles.setContainer}>{interspersedFields}</HStack>
+                    <VStack style={styles.setColumn}>
+                        <HStack style={styles.setContainer}>{interspersedFields}</HStack>
+                        {previousLabel && <Text style={styles.previous}>{previousLabel}</Text>}
+                    </VStack>
                     <Box style={styles.restContainer}>
                         <Rest
                             workoutExerciseId={set.workoutExerciseId}
@@ -409,6 +435,7 @@ export const SetItem = memo(SetItemComponent, (prev, next) => {
     if (prev.index !== next.index) return false;
     if (prev.activeSetId !== next.activeSetId) return false;
     if (prev.restingSetId !== next.restingSetId) return false;
+    if (prev.previousSet !== next.previousSet) return false;
 
     const prevIsTimeSensitive =
         prev.set.id === prev.activeSetId || prev.set.id === prev.restingSetId;

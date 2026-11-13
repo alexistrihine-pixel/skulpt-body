@@ -211,12 +211,18 @@ const colors = {
     },
 };
 
+// Accent colours: change them here to restyle the whole app (buttons, active sets, timers...).
 const lightTheme = {
     colors: {
         background: colors.white,
         foreground: colors.neutral[100],
         typography: colors.neutral[950],
         border: colors.neutral[300],
+        surfaceRaised: colors.neutral[200],
+        accent: colors.lime[400],
+        accentStrong: colors.lime[500],
+        accentMuted: 'rgba(163, 230, 53, 0.16)',
+        onAccent: colors.neutral[950],
         ...colors,
     },
     ...common,
@@ -229,6 +235,11 @@ const darkTheme = {
         foreground: colors.neutral[900],
         typography: colors.white,
         border: colors.neutral[700],
+        surfaceRaised: colors.neutral[800],
+        accent: colors.lime[400],
+        accentStrong: colors.lime[500],
+        accentMuted: 'rgba(163, 230, 53, 0.16)',
+        onAccent: colors.neutral[950],
         ...colors,
     },
     ...common,

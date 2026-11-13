@@ -40,6 +40,7 @@ export type ExerciseListSelect = Pick<
     | 'tracking'
     | 'primaryMuscleGroups'
     | 'gifFilename'
+    | 'imageUri'
     | 'userId'
     | 'source'
 >;
@@ -302,6 +303,7 @@ export const getFilteredExercises = async (
             tracking: exercise.tracking,
             primaryMuscleGroups: exercise.primaryMuscleGroups,
             gifFilename: exercise.gifFilename,
+            imageUri: exercise.imageUri,
             userId: exercise.userId,
             source: exercise.source,
         })

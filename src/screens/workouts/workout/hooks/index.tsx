@@ -53,13 +53,13 @@ const useWorkoutScreen = () => {
                 isEditMode ? (
                     <CloseButton
                         onPressHandler={handleCancelEdit}
-                        backgroundColor={theme.colors.lime[500]}
+                        backgroundColor={theme.colors.accentStrong}
                         iconColor={theme.colors.neutral[950]}
                     />
                 ) : (
                     <BackButton
                         onPressHandler={handleBack}
-                        backgroundColor={theme.colors.lime[500]}
+                        backgroundColor={theme.colors.accentStrong}
                         iconColor={theme.colors.neutral[950]}
                     />
                 ),
@@ -67,13 +67,13 @@ const useWorkoutScreen = () => {
                 isEditMode ? null : (
                     <ActionsButton
                         onPressHandler={handleActions}
-                        backgroundColor={theme.colors.lime[500]}
+                        backgroundColor={theme.colors.accentStrong}
                         iconColor={theme.colors.neutral[950]}
                     />
                 ),
             cardStyle: {
                 ...options.cardStyle,
-                backgroundColor: theme.colors.lime[400],
+                backgroundColor: theme.colors.accent,
             },
         },
     };

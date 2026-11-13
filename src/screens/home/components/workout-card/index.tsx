@@ -21,8 +21,7 @@ dayjs.extend(localizedFormat);
 
 const styles = StyleSheet.create((theme, rt) => ({
     container: (status: WorkoutSelect['status']) => ({
-        backgroundColor:
-            status === 'in_progress' ? theme.colors.lime[400] : theme.colors.foreground,
+        backgroundColor: status === 'in_progress' ? theme.colors.accent : theme.colors.foreground,
     }),
     card: {
         paddingVertical: theme.space(3),
@@ -52,8 +51,7 @@ const styles = StyleSheet.create((theme, rt) => ({
     workoutColor: (status: WorkoutSelect['status']) => ({
         width: theme.space(4),
         height: theme.space(4),
-        backgroundColor:
-            status === 'in_progress' ? theme.colors.neutral[950] : theme.colors.lime[400],
+        backgroundColor: status === 'in_progress' ? theme.colors.neutral[950] : theme.colors.accent,
         borderRadius: theme.radius.full,
     }),
     swipeable: {
@@ -88,6 +86,31 @@ const styles = StyleSheet.create((theme, rt) => ({
     workoutInfoContainer: {
         alignItems: 'center',
     },
+    chips: {
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: theme.space(1.5),
+    },
+    chip: (status: WorkoutSelect['status']) => ({
+        paddingHorizontal: theme.space(2.5),
+        height: theme.space(6),
+        justifyContent: 'center',
+        borderRadius: theme.radius.full,
+        backgroundColor:
+            status === 'in_progress' ? 'rgba(10, 10, 10, 0.14)' : theme.colors.accentMuted,
+    }),
+    chipText: (status: WorkoutSelect['status']) => ({
+        fontSize: theme.fontSize.xs.fontSize,
+        lineHeight: theme.fontSize.xs.lineHeight,
+        fontWeight: theme.fontWeight.semibold.fontWeight,
+        color: status === 'in_progress' ? theme.colors.onAccent : theme.colors.accent,
+    }),
+    countsText: (status: WorkoutSelect['status']) => ({
+        fontSize: theme.fontSize.sm.fontSize,
+        fontWeight: theme.fontWeight.semibold.fontWeight,
+        color: status === 'in_progress' ? theme.colors.onAccent : theme.colors.typography,
+        opacity: status === 'in_progress' ? 1 : 0.7,
+    }),
 }));
 
 interface WorkoutCardProps {
@@ -127,12 +150,21 @@ const WorkoutCardComponent: FC<WorkoutCardProps> = ({
     activeElapsedFormatted,
     overviewMeta,
 }) => {
-    const { t, i18n } = useTranslation(['common']);
+    const { t, i18n } = useTranslation(['common', 'screens']);
     const { theme } = useUnistyles();
 
     const deleteWorkout = useDeleteWorkout();
     const sortedWorkoutTypes = overviewMeta?.sortedWorkoutTypes ?? [];
     const sortedPrimaryMuscleGroups = overviewMeta?.sortedPrimaryMuscleGroups ?? [];
+    const exercisesCount = overviewMeta?.exercisesCount ?? 0;
+    const setsCount = overviewMeta?.setsCount ?? 0;
+    const countsLabel =
+        exercisesCount > 0
+            ? [
+                  t('home.exercisesCount', { ns: 'screens', count: exercisesCount }),
+                  t('home.setsCount', { ns: 'screens', count: setsCount }),
+              ].join(' · ')
+            : null;
 
     const handlePress = useCallback(() => {
         onPress(workout.id);
@@ -240,7 +272,7 @@ const WorkoutCardComponent: FC<WorkoutCardProps> = ({
                                         )}
                                     </HStack>
                                 )}
-                                {sortedPrimaryMuscleGroups.length > 0 && (
+                                {countsLabel && (
                                     <>
                                         {['in_progress', 'completed'].includes(workout.status) && (
                                             <Dot
@@ -252,21 +284,23 @@ const WorkoutCardComponent: FC<WorkoutCardProps> = ({
                                                 size={theme.space(4)}
                                             />
                                         )}
-                                        <Text
-                                            style={[
-                                                styles.workoutInfoTextSize,
-                                                styles.workoutInfoTextColor(workout.status),
-                                            ]}
-                                        >
-                                            {sortedPrimaryMuscleGroups
-                                                .map((muscle) =>
-                                                    t(`muscleGroup.${muscle}`, { ns: 'common' }),
-                                                )
-                                                .join(', ')}
+                                        <Text style={styles.countsText(workout.status)}>
+                                            {countsLabel}
                                         </Text>
                                     </>
                                 )}
                             </HStack>
+                            {sortedPrimaryMuscleGroups.length > 0 && (
+                                <HStack style={styles.chips}>
+                                    {sortedPrimaryMuscleGroups.slice(0, 4).map((muscle) => (
+                                        <Box key={muscle} style={styles.chip(workout.status)}>
+                                            <Text style={styles.chipText(workout.status)}>
+                                                {t(`muscleGroup.${muscle}`, { ns: 'common' })}
+                                            </Text>
+                                        </Box>
+                                    ))}
+                                </HStack>
+                            )}
                         </VStack>
                     </HStack>
                 </Pressable>

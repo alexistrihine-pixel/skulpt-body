@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getPreviousExerciseSets } from '@/crud/workout/previous';
 import * as Notifications from 'expo-notifications';
 import {
     WorkoutSelect,
@@ -121,6 +122,8 @@ export const useWorkouts = () => {
 export interface WorkoutOverviewMeta {
     sortedWorkoutTypes: string[];
     sortedPrimaryMuscleGroups: string[];
+    exercisesCount: number;
+    setsCount: number;
 }
 
 export type WorkoutOverviewMetaMap = Record<string, WorkoutOverviewMeta>;
@@ -145,6 +148,8 @@ export const useWorkoutsOverviewMeta = (workoutIds: string[]) => {
 
             const categoryCountsByWorkoutId = new Map<string, Map<string, number>>();
             const primaryMuscleCountsByWorkoutId = new Map<string, Map<string, number>>();
+            const exercisesCountByWorkoutId = new Map<string, number>();
+            const setsCountByWorkoutId = new Map<string, number>();
 
             for (const workoutId of uniqueWorkoutIds) {
                 categoryCountsByWorkoutId.set(workoutId, new Map());
@@ -152,6 +157,15 @@ export const useWorkoutsOverviewMeta = (workoutIds: string[]) => {
             }
 
             for (const row of rows) {
+                exercisesCountByWorkoutId.set(
+                    row.workoutId,
+                    (exercisesCountByWorkoutId.get(row.workoutId) || 0) + 1,
+                );
+                setsCountByWorkoutId.set(
+                    row.workoutId,
+                    (setsCountByWorkoutId.get(row.workoutId) || 0) + Number(row.setsCount || 0),
+                );
+
                 const categoryCounts = categoryCountsByWorkoutId.get(row.workoutId);
                 if (categoryCounts) {
                     categoryCounts.set(row.category, (categoryCounts.get(row.category) || 0) + 1);
@@ -177,6 +191,8 @@ export const useWorkoutsOverviewMeta = (workoutIds: string[]) => {
                     sortedPrimaryMuscleGroups: getSortedKeysByCount(
                         primaryMuscleCountsByWorkoutId.get(workoutId) || new Map(),
                     ),
+                    exercisesCount: exercisesCountByWorkoutId.get(workoutId) || 0,
+                    setsCount: setsCountByWorkoutId.get(workoutId) || 0,
                 };
                 return acc;
             }, {});
@@ -192,6 +208,16 @@ export const useWorkout = (workoutId: string) => {
         queryKey: ['workout', workoutId],
         queryFn: () => getWorkoutById(workoutId),
         enabled: !!workoutId,
+    });
+};
+
+/** Sets done last time on this exercise (most recent other completed workout). */
+export const usePreviousExerciseSets = (exerciseId?: string, workoutId?: string) => {
+    return useQuery({
+        queryKey: ['previous-exercise-sets', exerciseId, workoutId],
+        queryFn: () => getPreviousExerciseSets(exerciseId!, workoutId!),
+        enabled: !!exerciseId && !!workoutId,
+        staleTime: 60_000,
     });
 };
 

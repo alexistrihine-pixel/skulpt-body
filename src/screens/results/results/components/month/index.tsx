@@ -118,8 +118,8 @@ const styles = StyleSheet.create((theme) => ({
         borderColor: theme.colors.border,
     },
     calendarDayCircleCompleted: {
-        backgroundColor: theme.colors.lime[400],
-        borderColor: theme.colors.lime[400],
+        backgroundColor: theme.colors.accent,
+        borderColor: theme.colors.accent,
     },
     calendarDayCircleToday: {
         borderColor: theme.colors.typography,

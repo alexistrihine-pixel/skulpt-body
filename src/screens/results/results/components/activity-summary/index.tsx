@@ -408,7 +408,7 @@ const ActivitySummary = ({ onScrubbingChange }: ActivitySummaryProps) => {
         return visibleMonthStart.isBefore(currentMonthStart, 'month');
     }, [visibleMonthStart]);
 
-    const currentLineColor = theme.colors.lime[400];
+    const currentLineColor = theme.colors.accent;
     const previousLineColor = theme.colors.border;
 
     const clampedSelectedDayIndex = useMemo(() => {

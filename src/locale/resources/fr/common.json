@@ -1,0 +1,392 @@
+{
+    "number": "{{value, number}}",
+    "weight": {
+        "weight_kg": "$t(number, {\"value\": {{value}} }) kg",
+        "weight_lb": "$t(number, {\"value\": {{value}} }) lb"
+    },
+    "save": "Enregistrer",
+    "showMoreN": "Afficher {{number}} de plus",
+    "hide": "Masquer",
+    "change": "Modifier",
+    "reset": "Réinitialiser",
+    "done": "Terminé",
+    "begin": "Commencer",
+    "complete": "Terminer",
+    "completeWorkout": "Terminer la séance ?",
+    "repeat": "Répéter",
+    "add": "Ajouter",
+    "cancel": "Annuler",
+    "now": "Maintenant",
+    "rest": "repos",
+    "select": "Choisir",
+    "edit": "Modifier",
+    "merge": "Fusionner",
+    "delete": "Supprimer",
+    "create": "Créer",
+    "exercise": "Exercice",
+    "code": "Code",
+    "problem": "Problème",
+    "feedback": "Avis",
+    "weightUnits": {
+        "kg": "kilogramme",
+        "lb": "livre"
+    },
+    "distanceUnits": {
+        "km": "kilomètre",
+        "mi": "mile"
+    },
+    "measurementUnits": {
+        "cm": "centimètre",
+        "in": "pouce"
+    },
+    "timeFormat": {
+        "12h": "12 heures",
+        "24h": "24 heures"
+    },
+    "weekday": {
+        "monday": "lundi",
+        "sunday": "dimanche"
+    },
+    "exerciseCategory": {
+        "strength": "Musculation",
+        "cardio": "Cardio",
+        "flexibility": "Souplesse",
+        "yoga": "Yoga",
+        "pilates": "Pilates",
+        "other": "Autre"
+    },
+    "exerciseTracking": {
+        "weight": "Poids",
+        "time": "Temps",
+        "reps": "Répétitions",
+        "distance": "Distance"
+    },
+    "exerciseTrackingDescription": {
+        "weight+reps": [
+            "Séries classiques — poids fixe pour un nombre de répétitions donné",
+            "Pyramide inversée — poids décroissant, répétitions croissantes",
+            "Pyramide classique — poids croissant, répétitions décroissantes",
+            "Séries en cluster — répétitions fractionnées par de courtes pauses",
+            "Myo-reps — série principale + répétitions supplémentaires plus légères"
+        ],
+        "time": [
+            "Temps fixe — exercice tenu pendant une durée donnée",
+            "Intervalles — alternance effort et repos",
+            "Temps progressif — durée d'exercice croissante"
+        ],
+        "reps": [
+            "Répétitions fixes — nombre strictement défini",
+            "Pyramide de répétitions — nombre variant selon un schéma",
+            "Jusqu'à l'échec — maximum de répétitions possible"
+        ],
+        "time+reps": [
+            "AMRAP (autant de répétitions que possible) — maximum de répétitions dans le temps",
+            "Tabata — 20 secondes d'effort, 10 secondes de repos",
+            "Répétitions par intervalles — nombre fixé dans chaque intervalle",
+            "Répétitions tempo — contrôle de la durée de chaque répétition",
+            "Échelles — répétitions qui évoluent dans le temps"
+        ],
+        "distance+time": [
+            "Courses tempo — distance fixée dans un temps cible",
+            "Fractionné — segments de distance avec contrôle du temps",
+            "Allure constante — même vitesse sur toute la distance",
+            "Course progressive — accélération au fil de la distance",
+            "Negative split — seconde moitié plus rapide"
+        ],
+        "weight": [
+            "Poids fixe — un seul poids jusqu'à l'échec",
+            "Poids progressif — poids augmenté au fil des séries",
+            "Dégressives — poids réduit au cours d'une même série"
+        ],
+        "distance": [
+            "Distance fixe — parcourir une distance donnée",
+            "Distance progressive — distance augmentée peu à peu",
+            "Distance par intervalles — alternance de segments longs et courts",
+            "Fartlek — variations libres au ressenti"
+        ],
+        "weight+time": [
+            "Séries tempo — poids fixé dans un temps donné",
+            "Densité — volume maximal soulevé dans le temps",
+            "Temps sous tension — tempo contrôlé avec charge",
+            "EMOM avec charge — poids donné chaque minute"
+        ],
+        "weight+distance": [
+            "Farmer's walk — porter une charge sur une distance",
+            "Traîneau — tirer une charge sur une distance",
+            "Marche lestée — marcher ou courir avec un sac chargé",
+            "Portés de kettlebell — différentes façons de transporter la charge",
+            "Montées lestées — ascension avec charge supplémentaire"
+        ],
+        "distance+reps": [
+            "Navettes — nombre d'allers-retours sur un segment",
+            "Sprints fractionnés — nombre de segments donné",
+            "Escaliers — nombre de volées ou d'étages",
+            "Tours de piste — nombre de tours fixé",
+            "Pompes en déplacement — répétitions + déplacement"
+        ],
+        "weight+time+reps": [
+            "Séries complexes — les trois paramètres fixés",
+            "Charge progressive — tous les paramètres évoluent",
+            "Supersets encadrés — enchaînement d'exercices à trois paramètres",
+            "Circuit training — ateliers avec poids, temps et répétitions",
+            "Pliométrie lestée — mouvements explosifs encadrés",
+            "WOD CrossFit — mouvements fonctionnels à trois paramètres",
+            "Séries tempo avec charge — toutes les variables contrôlées",
+            "Force par intervalles — cardio et force combinés"
+        ],
+        "weight+time+distance": [
+            "Marathon lesté — distance avec charge dans un temps donné",
+            "Épreuves militaires — distance en tenue complète dans un temps limite",
+            "Course d'obstacles — OCR avec charge supplémentaire",
+            "Alpinisme équipé — dénivelé avec matériel",
+            "Triathlon lesté — disciplines combinées"
+        ],
+        "weight+reps+distance": [
+            "Burpees en déplacement — répétitions avec progression",
+            "Relais fonctionnels — ateliers chargés le long d'un parcours",
+            "Parcours CrossFit — WOD avec déplacements entre zones",
+            "Spartan Race — obstacles avec répétitions sur la distance",
+            "Exercices militaires appliqués — tous les paramètres combinés"
+        ],
+        "time+reps+distance": [
+            "Fractionné sur distance — segments avec répétitions dans le temps",
+            "Circuit course — nombre de tours dans un temps donné",
+            "Pyramides sur piste — distance et répétitions variables",
+            "Fartlek tempo — accélérations libres pendant la course",
+            "Tests à paliers — paramètres augmentés progressivement"
+        ],
+        "weight+time+reps+distance": [
+            "Entraînement fonctionnel complet — tous les paramètres contrôlés",
+            "Décathlon militaire — contrôle complet de toutes les variables",
+            "Courses extrêmes — triathlon+ avec épreuves supplémentaires",
+            "Tests professionnels — pompiers, police, armée",
+            "Style CrossFit Games — compétition d'élite à complexité maximale",
+            "Marathons strongman — exercices de force en déplacement",
+            "Ultra-défis — tests d'endurance extrêmes",
+            "Fitness fonctionnel avancé — application sportive",
+            "Opérations militaires spéciales — tâches de terrain réelles",
+            "Raids aventure — courses de plusieurs jours en pleine charge"
+        ]
+    },
+    "muscleGroup": {
+        "neck": "Cou",
+        "sternocleidomastoid": "Sterno-cléido-mastoïdien",
+        "scalenes": "Scalènes",
+        "splenius_capitis": "Splénius de la tête",
+        "shoulders": "Épaules",
+        "front_deltoid": "Deltoïde antérieur",
+        "lateral_deltoid": "Deltoïde latéral",
+        "rear_deltoid": "Deltoïde postérieur",
+        "rotator_cuff": "Coiffe des rotateurs",
+        "supraspinatus": "Sus-épineux",
+        "infraspinatus": "Sous-épineux",
+        "teres_minor": "Petit rond",
+        "subscapularis": "Sous-scapulaire",
+        "chest": "Pectoraux",
+        "pectoralis_major": "Grand pectoral",
+        "clavicular_head": "Faisceau claviculaire",
+        "sternal_head": "Faisceau sternal",
+        "abdominal_head": "Faisceau abdominal",
+        "pectoralis_minor": "Petit pectoral",
+        "serratus_anterior": "Dentelé antérieur",
+        "arms": "Bras",
+        "biceps": "Biceps",
+        "biceps_long_head": "Biceps, chef long",
+        "biceps_short_head": "Biceps, chef court",
+        "brachialis": "Brachial",
+        "triceps": "Triceps",
+        "triceps_long_head": "Triceps, chef long",
+        "triceps_lateral_head": "Triceps, chef latéral",
+        "triceps_medial_head": "Triceps, chef médial",
+        "forearms": "Avant-bras",
+        "brachioradialis": "Brachio-radial",
+        "wrist_flexors": "Fléchisseurs du poignet",
+        "wrist_extensors": "Extenseurs du poignet",
+        "back": "Dos",
+        "traps": "Trapèzes",
+        "upper_traps": "Trapèzes supérieurs",
+        "middle_traps": "Trapèzes moyens",
+        "lower_traps": "Trapèzes inférieurs",
+        "lats": "Dorsaux",
+        "latissimus_dorsi": "Grand dorsal",
+        "teres_major": "Grand rond",
+        "rhomboids": "Rhomboïdes",
+        "rhomboid_major": "Grand rhomboïde",
+        "rhomboid_minor": "Petit rhomboïde",
+        "lower_back": "Bas du dos",
+        "erector_spinae": "Érecteurs du rachis",
+        "multifidus": "Multifides",
+        "quadratus_lumborum": "Carré des lombes",
+        "abs": "Abdominaux",
+        "core": "Gainage",
+        "rectus_abdominis": "Grand droit de l'abdomen",
+        "upper_abs": "Abdominaux supérieurs",
+        "lower_abs": "Abdominaux inférieurs",
+        "transverse_abdominis": "Transverse de l'abdomen",
+        "obliques": "Obliques",
+        "external_obliques": "Obliques externes",
+        "internal_obliques": "Obliques internes",
+        "legs": "Jambes",
+        "glutes": "Fessiers",
+        "gluteus_maximus": "Grand fessier",
+        "gluteus_medius": "Moyen fessier",
+        "gluteus_minimus": "Petit fessier",
+        "hip_abductors": "Abducteurs de la hanche",
+        "tensor_fasciae_latae": "Tenseur du fascia lata",
+        "hip_external_rotators": "Rotateurs externes de la hanche",
+        "piriformis": "Piriforme",
+        "obturator_internus": "Obturateur interne",
+        "adductors": "Adducteurs",
+        "adductor_longus": "Long adducteur",
+        "adductor_brevis": "Court adducteur",
+        "adductor_magnus": "Grand adducteur",
+        "gracilis": "Gracile",
+        "hip_flexors": "Fléchisseurs de la hanche",
+        "iliopsoas": "Ilio-psoas",
+        "sartorius": "Sartorius",
+        "pectineus": "Pectiné",
+        "hamstrings": "Ischio-jambiers",
+        "biceps_femoris": "Biceps fémoral",
+        "semitendinosus": "Semi-tendineux",
+        "semimembranosus": "Semi-membraneux",
+        "quads": "Quadriceps",
+        "rectus_femoris": "Droit fémoral",
+        "vastus_lateralis": "Vaste latéral",
+        "vastus_medialis": "Vaste médial",
+        "vastus_intermedius": "Vaste intermédiaire",
+        "calves": "Mollets",
+        "gastrocnemius_medial_head": "Gastrocnémien, chef médial",
+        "gastrocnemius_lateral_head": "Gastrocnémien, chef latéral",
+        "soleus": "Soléaire",
+        "shins": "Tibias",
+        "tibialis_anterior": "Tibial antérieur"
+    },
+    "weightUnit": {
+        "kg": "kg",
+        "lb": "lb"
+    },
+    "distanceUnit": {
+        "km": "km",
+        "mi": "mi"
+    },
+    "distanceActivityType": {
+        "outdoor_running": "Course en extérieur",
+        "indoor_running": "Course en intérieur",
+        "outdoor_walking": "Marche en extérieur",
+        "indoor_walking": "Marche en intérieur",
+        "stationary_bike": "Vélo d'appartement",
+        "bike": "Vélo",
+        "elliptical": "Elliptique",
+        "cardio": "Cardio"
+    },
+    "timeOption": {
+        "log": "Saisie",
+        "timer": "Minuteur",
+        "stopwatch": "Chronomètre"
+    },
+    "workoutStatus": {
+        "planned": "Prévue",
+        "in_progress": "En cours",
+        "completed": "Terminée",
+        "cancelled": "Annulée"
+    },
+    "setType": {
+        "working": "Travail",
+        "warmup": "Échauffement",
+        "dropset": "Dégressive",
+        "failure": "Échec"
+    },
+    "setTypeShort": {
+        "working": "T",
+        "warmup": "É",
+        "dropset": "D",
+        "failure": "X"
+    },
+    "workoutRemind": {
+        "start": "Début de la séance",
+        "5m": "5 minutes avant",
+        "10m": "10 minutes avant",
+        "15m": "15 minutes avant",
+        "30m": "30 minutes avant",
+        "1h": "1 heure avant",
+        "2h": "2 heures avant"
+    },
+    "setRestType": {
+        "after_set": "Après la série",
+        "between_sets": "Entre les séries",
+        "after_exercise": "Après l'exercice",
+        "all_intervals": "Tous les intervalles"
+    },
+    "errors": {
+        "exercise": {
+            "name": {
+                "required": "Le nom de l'exercice est obligatoire"
+            },
+            "category": {
+                "required": "Choisis une catégorie"
+            },
+            "tracking": {
+                "required": "Choisis un type de suivi"
+            },
+            "weightUnits": {
+                "required": "Choisis une unité de poids"
+            },
+            "weightAssisted": {
+                "required": "Est-ce un exercice assisté ?"
+            },
+            "weightDoubleInStats": {
+                "required": "Doubler le poids dans les stats ?"
+            },
+            "timeOptions": {
+                "required": "Choisis une option de temps"
+            },
+            "timeHalfwayAlert": {
+                "required": "Alerte à mi-parcours ?"
+            },
+            "distanceUnits": {
+                "required": "Choisis une unité de distance"
+            },
+            "distanceActivityType": {
+                "required": "Choisis un type d'activité"
+            },
+            "distanceTrackAW": {
+                "required": "Suivre avec l'Apple Watch ?"
+            },
+            "primaryMuscleGroups": {
+                "invalidSelection": "Les muscles principaux ne peuvent pas contenir de doublons ni un groupe et l'un de ses sous-groupes"
+            },
+            "secondaryMuscleGroups": {
+                "invalidSelection": "Les muscles secondaires ne peuvent pas contenir de doublons ni un groupe et l'un de ses sous-groupes",
+                "overlapPrimary": "Les muscles secondaires ne peuvent pas recouper les muscles principaux"
+            }
+        }
+    },
+    "pushes": {
+        "workouts": {
+            "ended": {
+                "title": "Repos terminé",
+                "body": "La séance est finie. Elle était intense !"
+            },
+            "work": {
+                "title": "Au travail",
+                "body": "{{exerciseName}}, série {{setNumber}}, {{setTracking}}"
+            }
+        }
+    },
+    "placeholder": {
+        "search": "Rechercher"
+    },
+    "durations": {
+        "hr": "h",
+        "min": "min",
+        "sec": "s"
+    },
+    "promo": {
+        "pushes": {
+            "title": "Notifications",
+            "description": "Active-les pour être prévenu des nouvelles séries et de la fin du repos.",
+            "turnOn": "Activer",
+            "delay": "Plus tard"
+        }
+    }
+}

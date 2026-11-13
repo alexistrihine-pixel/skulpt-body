@@ -20,6 +20,7 @@ const makeExercise = (
     tracking: ['weight', 'reps'],
     primaryMuscleGroups,
     gifFilename: null,
+    imageUri: null,
     userId: 'skulpt',
     source: 'system',
 });

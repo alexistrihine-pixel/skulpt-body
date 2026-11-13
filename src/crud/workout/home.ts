@@ -8,6 +8,7 @@ export interface WorkoutOverviewExerciseMetaRow {
     workoutId: string;
     category: ExerciseSelect['category'];
     primaryMuscleGroups: ExerciseSelect['primaryMuscleGroups'];
+    setsCount: number;
 }
 
 export const getWorkoutOverviewExerciseMetaRows = async (
@@ -24,6 +25,7 @@ export const getWorkoutOverviewExerciseMetaRows = async (
             workoutId: workoutExercise.workoutId,
             category: exercise.category,
             primaryMuscleGroups: exercise.primaryMuscleGroups,
+            setsCount: sql<number>`(select count(*) from ${exerciseSet} where ${exerciseSet.workoutExerciseId} = ${workoutExercise.id})`,
         })
         .from(workoutExercise)
         .innerJoin(workout, eq(workoutExercise.workoutId, workout.id))

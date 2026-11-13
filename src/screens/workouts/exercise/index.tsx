@@ -1,5 +1,5 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform } from 'react-native';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, useWindowDimensions } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -12,7 +12,20 @@ import {
 
 import { Box } from '@/components/primitives/box';
 import Spinner from '@/components/feedback/spinner';
-import { useUpdateExerciseSet, useWorkoutWithDetails } from '@/hooks/use-workouts';
+import {
+    usePreviousExerciseSets,
+    useUpdateExerciseSet,
+    useWorkoutWithDetails,
+} from '@/hooks/use-workouts';
+import { useTranslation } from 'react-i18next';
+import { ExerciseNotes } from '@/components/layout/exercise-notes';
+import { Keypad, KEYPAD_HEIGHT } from '@/components/overlays/keypad';
+import {
+    KeypadTarget,
+    keypadFieldMeasurers,
+    keypadTargetKey,
+    useKeypadStore,
+} from '@/stores/keypad';
 import { ExerciseSetSelect } from '@/db/schema';
 import { useRunningWorkoutTicker } from '@/hooks/use-running-workout';
 
@@ -26,11 +39,11 @@ const styles = StyleSheet.create((theme, rt) => ({
     container: {
         flex: 1,
     },
-    content: {
+    content: (keypadOpen: boolean) => ({
         flexGrow: 1,
-        paddingBottom: rt.insets.bottom + theme.space(20),
+        paddingBottom: rt.insets.bottom + theme.space(20) + (keypadOpen ? KEYPAD_HEIGHT : 0),
         backgroundColor: theme.colors.background,
-    },
+    }),
     scroll: {
         flex: 1,
     },
@@ -72,6 +85,39 @@ const WorkoutExerciseScreen: FC = () => {
     const { data: workoutDetails, isLoading } = useWorkoutWithDetails(workoutId || '');
 
     const { mutateAsync: updateSet } = useUpdateExerciseSet();
+    const { t } = useTranslation(['screens']);
+    const keypadTarget = useKeypadStore((s) => s.target);
+    const keypadHeight = useKeypadStore((s) => s.height);
+    const keypadOpen = keypadTarget !== null;
+    const scrollRef = useRef<any>(null);
+    const scrollYRef = useRef(0);
+    const { height: windowHeight } = useWindowDimensions();
+
+    // Keep the field being edited visible above the number pad.
+    useEffect(() => {
+        if (!keypadTarget || keypadHeight <= 0) return;
+        const measure = keypadFieldMeasurers.get(keypadTargetKey(keypadTarget));
+        if (!measure) return;
+        let cancelled = false;
+        measure().then((pos) => {
+            if (cancelled || !pos) return;
+            const visibleBottom = windowHeight - keypadHeight - theme.space(4);
+            const fieldBottom = pos.y + pos.height + theme.space(8);
+            const visibleTop = theme.screenHeaderHeight() + theme.space(2);
+            let delta = 0;
+            if (fieldBottom > visibleBottom) delta = fieldBottom - visibleBottom;
+            else if (pos.y < visibleTop) delta = pos.y - visibleTop;
+            if (delta !== 0) {
+                scrollRef.current?.scrollTo({
+                    y: Math.max(0, scrollYRef.current + delta),
+                    animated: true,
+                });
+            }
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [keypadTarget, keypadHeight, windowHeight, theme]);
 
     const {
         nowMs,
@@ -89,6 +135,8 @@ const WorkoutExerciseScreen: FC = () => {
     }, [workoutDetails, workoutExerciseId]);
 
     const sourceItems = useMemo(() => exerciseInfo?.sets || [], [exerciseInfo?.sets]);
+
+    const { data: previousSets } = usePreviousExerciseSets(exerciseInfo?.exercise?.id, workoutId);
     const sourceItemsKey = useMemo(
         () => sourceItems.map(getSetSnapshotKey).join('|'),
         [sourceItems],
@@ -127,6 +175,39 @@ const WorkoutExerciseScreen: FC = () => {
         [localItems, sourceItemsKey, updateSet],
     );
 
+    const keypadFields = useMemo<KeypadTarget[]>(() => {
+        const tracking = Array.isArray(exerciseInfo?.exercise?.tracking)
+            ? exerciseInfo!.exercise.tracking
+            : [];
+        const fields = tracking.filter(
+            (f): f is 'weight' | 'reps' => f === 'weight' || f === 'reps',
+        );
+        return localItems.flatMap((item) => fields.map((field) => ({ setId: item.id, field })));
+    }, [exerciseInfo, localItems]);
+
+    const getKeypadValue = useCallback(
+        (target: KeypadTarget) => {
+            const item = localItems.find((it) => it.id === target.setId);
+            return item ? item[target.field] : null;
+        },
+        [localItems],
+    );
+
+    const handleKeypadChange = useCallback(
+        (target: KeypadTarget, value: number) => {
+            updateSet({ id: target.setId, updates: { [target.field]: value } });
+        },
+        [updateSet],
+    );
+
+    const getSetLabel = useCallback(
+        (setId: string) => {
+            const index = localItems.findIndex((it) => it.id === setId);
+            return t('training.keypad.set', { ns: 'screens', number: index + 1 });
+        },
+        [localItems, t],
+    );
+
     const handleDragStart = useCallback(() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }, []);
@@ -134,13 +215,19 @@ const WorkoutExerciseScreen: FC = () => {
     return (
         <Box style={styles.container}>
             <KeyboardAwareScrollView
+                ref={scrollRef}
+                onScroll={(e) => {
+                    scrollYRef.current = e.nativeEvent.contentOffset.y;
+                }}
+                scrollEventThrottle={16}
                 style={styles.scroll}
-                contentContainerStyle={styles.content}
+                contentContainerStyle={styles.content(keypadOpen)}
                 keyboardDismissMode="interactive"
                 bottomOffset={theme.space(2)}
                 extraKeyboardSpace={-actionsHeight}
             >
                 <Header exerciseInfo={exerciseInfo} />
+                {exerciseInfo && <ExerciseNotes exercise={exerciseInfo.exercise} />}
                 {isLoading ? (
                     <Box>
                         <Spinner />
@@ -184,6 +271,7 @@ const WorkoutExerciseScreen: FC = () => {
                                     activeStopwatchElapsedSeconds={
                                         activeStopwatchElapsedSeconds ?? null
                                     }
+                                    previousSet={previousSets?.[index] ?? null}
                                 />
                             )}
                         />
@@ -195,6 +283,13 @@ const WorkoutExerciseScreen: FC = () => {
                 workoutExerciseId={workoutExerciseId}
                 sets={exerciseInfo?.sets}
                 setActionsHeight={setActionsHeight}
+            />
+            <Keypad
+                fields={keypadFields}
+                getValue={getKeypadValue}
+                onChange={handleKeypadChange}
+                getSetLabel={getSetLabel}
+                weightUnits={exerciseInfo?.exercise?.weightUnits}
             />
         </Box>
     );

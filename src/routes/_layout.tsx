@@ -36,7 +36,9 @@ import 'dayjs/locale/ru';
 import 'dayjs/locale/zh';
 import 'dayjs/locale/es';
 import 'dayjs/locale/hi';
+import 'dayjs/locale/fr';
 import { AudioProvider } from '@/hooks/use-audio';
+import { seedExerciseCatalog } from '@/services/exercise-catalog';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -77,6 +79,15 @@ const App: FC = () => {
             SplashScreen.hideAsync();
         }
     }, [user]);
+
+    // Local-only build: insert the bundled exercise catalogue (no-op once up to date).
+    const userId = user?.id;
+    useEffect(() => {
+        if (!userId) return;
+        seedExerciseCatalog().then((count) => {
+            if (count > 0) queryClient.invalidateQueries();
+        });
+    }, [userId]);
 
     if (!user) return null;
 

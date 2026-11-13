@@ -7,6 +7,7 @@ import { Pressable } from '@/components/primitives/pressable';
 import { buildExerciseGifUrl, EXERCISE_GIF_THUMBNAIL_RESOLUTION } from '@/constants/skulpt';
 import { BoxProps } from '@/components/primitives/box';
 import { useAnalytics } from '@/hooks/use-analytics';
+import { toImageSource } from '@/helpers/exercise-image-source';
 
 const styles = StyleSheet.create((theme) => ({
     gifPreviewPressable: {
@@ -25,10 +26,14 @@ const styles = StyleSheet.create((theme) => ({
     },
 }));
 
+export type PreviewMedia = { gifFilename?: string; imageUri?: string };
+
 interface PreviewThumbnailProps {
     name: string;
     gifFilename?: string | null;
-    onOpen?: (name: string, gifFilename: string) => void;
+    /** User photo (file:// URI); shown instead of the GIF when present. */
+    imageUri?: string | null;
+    onOpen?: (name: string, media: PreviewMedia) => void;
     containerStyle?: BoxProps['style'];
     analyticsSurface?: 'exercise_library' | 'workout_select' | 'active_workout';
     analyticsWorkoutId?: string;
@@ -37,6 +42,7 @@ interface PreviewThumbnailProps {
 const PreviewThumbnailComponent: FC<PreviewThumbnailProps> = ({
     name,
     gifFilename,
+    imageUri,
     onOpen,
     containerStyle,
     analyticsSurface,
@@ -44,13 +50,14 @@ const PreviewThumbnailComponent: FC<PreviewThumbnailProps> = ({
 }) => {
     const { track } = useAnalytics();
     const gifThumbnailUrl = useMemo(() => {
+        if (imageUri) return imageUri;
         if (!gifFilename) return '';
         return buildExerciseGifUrl(gifFilename, EXERCISE_GIF_THUMBNAIL_RESOLUTION);
-    }, [gifFilename]);
+    }, [gifFilename, imageUri]);
 
     const handlePress = useCallback(
         (event: GestureResponderEvent) => {
-            if (!gifFilename) return;
+            if (!gifFilename && !imageUri) return;
             event.stopPropagation();
             if (analyticsSurface) {
                 track('exercise:preview_opened', {
@@ -58,9 +65,9 @@ const PreviewThumbnailComponent: FC<PreviewThumbnailProps> = ({
                     workoutId: analyticsWorkoutId,
                 });
             }
-            onOpen?.(name, gifFilename);
+            onOpen?.(name, imageUri ? { imageUri } : { gifFilename: gifFilename ?? undefined });
         },
-        [analyticsSurface, analyticsWorkoutId, gifFilename, name, onOpen, track],
+        [analyticsSurface, analyticsWorkoutId, gifFilename, imageUri, name, onOpen, track],
     );
 
     if (!gifThumbnailUrl) return null;
@@ -72,7 +79,7 @@ const PreviewThumbnailComponent: FC<PreviewThumbnailProps> = ({
             style={[styles.gifPreviewPressable, containerStyle]}
         >
             <ExpoImage
-                source={{ uri: gifThumbnailUrl }}
+                source={toImageSource(gifThumbnailUrl)}
                 style={styles.gifPreviewImage}
                 contentFit="cover"
                 autoplay={false}

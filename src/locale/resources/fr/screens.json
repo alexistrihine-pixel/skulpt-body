@@ -1,0 +1,502 @@
+{
+    "home": {
+        "title": "Accueil",
+        "planned": "Prévues",
+        "workoutsCount_one": "{{count}} séance",
+        "workoutsCount_other": "{{count}} séances",
+        "empty": {
+            "title": "Voici Skulpt",
+            "description": "L'appli pour suivre tes séances simplement et efficacement.",
+            "button": {
+                "title": "Planifier",
+                "description": "Ta première séance"
+            }
+        },
+        "exercisesCount_one": "{{count}} exercice",
+        "exercisesCount_other": "{{count}} exercices",
+        "setsCount_one": "{{count}} série",
+        "setsCount_other": "{{count}} séries"
+    },
+    "results": {
+        "title": "Résultats",
+        "stats": {
+            "title": "Stats",
+            "trainingWeeks": {
+                "title": "Semaines d'entraînement"
+            },
+            "trainingDays": {
+                "title": "Jours d'entraînement"
+            },
+            "trainingHours": {
+                "title": "Heures d'entraînement"
+            },
+            "workoutsCount": {
+                "title": "Séances"
+            },
+            "volume": {
+                "title": "Volume"
+            },
+            "exercisesCount": {
+                "title": "Exercices"
+            },
+            "setsCount": {
+                "title": "Séries"
+            },
+            "repsCount": {
+                "title": "Répétitions"
+            }
+        },
+        "activitySummary": {
+            "title": "Résumé d'activité"
+        },
+        "scale": {
+            "title": "Balance",
+            "metrics": {
+                "currentWeight": "Poids actuel",
+                "currentBodyFatPercentage": "Masse grasse actuelle"
+            },
+            "chart": {
+                "empty": "Aucune pesée pour l'instant",
+                "bodyFatPercentageEmpty": "Aucune mesure de masse grasse pour l'instant"
+            },
+            "modal": {
+                "date": "Date",
+                "weight": "Poids"
+            },
+            "actions": {
+                "weighIn": "Noter mon poids",
+                "log": "Noter"
+            }
+        },
+        "daySummary": {
+            "title": "Résumé du jour",
+            "stats": {
+                "workoutsCount": "Séances",
+                "totalWorkoutDuration": "Temps de séance",
+                "totalActiveTime": "Temps actif",
+                "totalRestTime": "Temps de repos",
+                "volume": "Volume",
+                "exercisesCount": "Exercices",
+                "setsCount": "Séries",
+                "repsCount": "Répétitions"
+            }
+        },
+        "strength": {
+            "metrics": {
+                "totalVolume": "Volume total",
+                "workoutFrequency": "Fréquence des séances",
+                "muscularLoad": "Charge musculaire"
+            },
+            "sessions_one": "{{count}} séance",
+            "sessions_other": "{{count}} séances",
+            "kSuffix": "k"
+        }
+    },
+    "exercises": {
+        "title": "Exercices",
+        "empty": {
+            "title": "Créer un exercice",
+            "description": "Touche ici pour créer ton premier exercice."
+        }
+    },
+    "filter": {
+        "title": "Filtres",
+        "ownership": {
+            "title": "Exercices",
+            "all": "Tous les exercices",
+            "mine": "Mes exercices",
+            "system": "Exercices du catalogue"
+        },
+        "category": {
+            "title": "Catégorie"
+        },
+        "tracking": {
+            "title": "Suivi"
+        },
+        "primaryMuscle": {
+            "title": "Groupe musculaire"
+        }
+    },
+    "appReview": {
+        "title": "Tu aimes Skulpt ?",
+        "options": {
+            "bad": "Pas du tout",
+            "notBad": "Ça va",
+            "good": "J'adore"
+        },
+        "submit": "Envoyer",
+        "actions": {
+            "close": "Fermer",
+            "submit": "Envoyer"
+        }
+    },
+    "exercise": {
+        "deleteExerciseAlert": "Supprimer cet exercice ?",
+        "tabs": {
+            "history": "Historique",
+            "guide": "Guide",
+            "statistics": "Stats"
+        },
+        "history": {
+            "empty": {
+                "title": "Aucun historique",
+                "description": "Lance une séance avec cet exercice pour voir ton historique."
+            }
+        },
+        "guide": {
+            "instructions": "Instructions",
+            "mistakes": "Erreurs fréquentes",
+            "empty": {
+                "title": "Aucun guide",
+                "description": "Il n'y a pas encore de guide pour cet exercice."
+            }
+        },
+        "stats": {
+            "empty": {
+                "title": "Pas de données 1RM",
+                "description": "Termine des séries avec poids et répétitions pour calculer ton maximum sur une répétition."
+            },
+            "oneRm": {
+                "cardTitle": "Maximum sur une répétition (1RM)",
+                "description": "Charge maximale estimée pour une répétition",
+                "latest": "Dernier",
+                "workoutsCount": "Séances avec cet exercice"
+            },
+            "volume": {
+                "cardTitle": "Volume total",
+                "description": "Charge totale à chaque séance",
+                "latest": "Dernier",
+                "progress": "Progression",
+                "empty": {
+                    "title": "Pas de données de volume",
+                    "description": "Termine des séries avec poids et répétitions pour calculer le volume total."
+                }
+            },
+            "averageWeight": {
+                "cardTitle": "Poids moyen sur la période",
+                "description": "Indicateur d'intensité sur la période",
+                "latest": "Dernier",
+                "workoutsCount": "Séances avec cet exercice",
+                "empty": {
+                    "title": "Pas de données de poids moyen",
+                    "description": "Termine des séries avec poids et répétitions pour calculer le poids moyen."
+                }
+            },
+            "intensity": {
+                "cardTitle": "Intensité (% du 1RM)",
+                "description": "Ton niveau d'effort par rapport à ton maximum",
+                "latest": "Dernier",
+                "workoutsCount": "Séances avec cet exercice",
+                "empty": {
+                    "title": "Pas de données d'intensité",
+                    "description": "Termine des séries avec poids et répétitions pour calculer l'intensité."
+                }
+            },
+            "relativeStrength": {
+                "cardTitle": "Force relative",
+                "description": "Force rapportée au poids de corps",
+                "latest": "Dernier",
+                "classificationLabel": "Niveau",
+                "classification": {
+                    "novice": "Novice",
+                    "beginner": "Débutant",
+                    "intermediate": "Intermédiaire",
+                    "advanced": "Avancé",
+                    "elite": "Élite"
+                },
+                "empty": {
+                    "noTraining": {
+                        "title": "Pas de données de force relative",
+                        "description": "Termine des séries de travail avec poids et répétitions pour calculer le 1RM."
+                    },
+                    "noBodyWeight": {
+                        "title": "Poids de corps requis",
+                        "description": "Renseigne ton poids dans l'écran Résultats pour calculer ta force relative."
+                    }
+                }
+            }
+        }
+    },
+    "exercise-create": {
+        "name": "Nom",
+        "category": "Catégorie",
+        "tracking": "Suivi",
+        "weight": "Poids",
+        "weightUnits": "Unité",
+        "weightAssisted": "Assisté",
+        "weightDoubleInStats": "Doubler dans les stats",
+        "distance": "Distance",
+        "distanceUnits": "Unité",
+        "distanceActivityType": "Type d'activité",
+        "distanceTrackAW": "Suivre avec l'Apple Watch",
+        "time": "Temps",
+        "timeOptions": "Options de temps",
+        "timeHalfwayAlert": "Alerte à mi-parcours",
+        "muscleGroups": "Groupes musculaires",
+        "primaryMuscleGroup": "Principal",
+        "secondaryMuscleGroup": "Secondaire",
+        "photo": "Photo",
+        "photoCamera": "Prendre une photo",
+        "photoLibrary": "Choisir dans la galerie",
+        "photoRemove": "Retirer la photo",
+        "photoPermissionTitle": "Accès à l'appareil photo",
+        "photoPermission": "Autorise l'accès à l'appareil photo dans les réglages pour photographier cet exercice.",
+        "photoOpenSettings": "Ouvrir les réglages"
+    },
+    "workout-editor": {
+        "name": "Nom",
+        "namePlaceholder": "Nouvelle séance",
+        "status": "Statut",
+        "startDate": "Date de début",
+        "setStartDate": "Choisir la date",
+        "start": "Début",
+        "end": "Fin",
+        "remind": "Rappel",
+        "duration": "Durée"
+    },
+    "workout": {
+        "deleteWorkoutAlert": "Supprimer cette séance ?",
+        "repeat": {
+            "now": "Maintenant",
+            "plan": "Planifier",
+            "completed": "Ajouter terminée"
+        },
+        "copy": {
+            "now": "Copier en cours",
+            "plan": "Copier en prévue",
+            "completed": "Copier en terminée"
+        },
+        "empty": {
+            "title": {
+                "planned": "Ajouter un exercice",
+                "in_progress": "Ajouter un exercice",
+                "completed": "Ajouter un exercice",
+                "cancelled": "Ajouter un exercice"
+            },
+            "description": {
+                "planned": "Touche ici pour ajouter le premier exercice de ta séance.",
+                "in_progress": "Touche ici pour ajouter le premier exercice de ta séance.",
+                "completed": "Touche ici pour ajouter le premier exercice de ta séance.",
+                "cancelled": "Touche ici pour ajouter le premier exercice de ta séance."
+            }
+        },
+        "supersets": {
+            "edit": "Modifier les supersets",
+            "create": "Créer un superset",
+            "remove": "Retirer le superset",
+            "removeFromGroup": "Retirer du groupe"
+        },
+        "stats": {
+            "sections": {
+                "zone": "Zones cardiaques",
+                "activity": "Activité",
+                "overview": "Aperçu",
+                "heartRate": "Fréquence cardiaque",
+                "recovery": "Récupération cardiaque"
+            },
+            "activeCalories": "Calories actives",
+            "totalCalories": "Calories totales",
+            "avgIntensity": "Intensité moyenne",
+            "intensityRange": "Plage d'intensité",
+            "avgHeartRate": "FC moyenne",
+            "heartRateRange": "Plage de FC",
+            "afterOneMinute": "Après 1 min",
+            "afterTwoMinutes": "Après 2 min",
+            "recoveryScale": {
+                "poor": "Faible",
+                "fair": "Correcte",
+                "good": "Bonne",
+                "excellent": "Excellente",
+                "superior": "Exceptionnelle"
+            },
+            "zoneLabel": "Zone {{zone}}",
+            "mhrUsed": "FC max",
+            "activeScore": "Score d'activité",
+            "avgMets": "METs moyens",
+            "distance": "Distance",
+            "pace": "Allure",
+            "cadence": "Cadence"
+        }
+    },
+    "workoutExercise": {
+        "delete": "Supprimer l'exercice",
+        "deleteAlert": "Retirer cet exercice de la séance ?",
+        "addSet": {
+            "warmup": {
+                "title": "Ajouter une série d'échauffement",
+                "description": "Une série plus légère pour préparer l'effort."
+            },
+            "dropset": {
+                "title": "Ajouter une série dégressive",
+                "description": "Va jusqu'à l'échec, baisse la charge, puis continue."
+            },
+            "failure": {
+                "title": "Ajouter une série à l'échec",
+                "description": "Une série menée jusqu'à ne plus pouvoir garder une bonne exécution."
+            },
+            "working": {
+                "title": "Ajouter une série de travail",
+                "description": "Une série classique, poids et répétitions constants."
+            }
+        }
+    },
+    "settings": {
+        "title": "Réglages",
+        "version": "Version",
+        "items": {
+            "notifications": {
+                "title": "Notifications"
+            },
+            "autolock": {
+                "title": "Verrouillage auto"
+            },
+            "theme": {
+                "title": "Thème",
+                "auto": "Système",
+                "light": "Clair",
+                "dark": "Sombre"
+            },
+            "sound": {
+                "title": "Son"
+            },
+            "dateTime": {
+                "title": "Date et heure"
+            },
+            "units": {
+                "title": "Unités"
+            },
+            "language": {
+                "title": "Langue"
+            },
+            "heartRate": {
+                "title": "Fréquence cardiaque"
+            },
+            "resetWatchSync": {
+                "title": "Réinitialiser la montre",
+                "confirmTitle": "Réinitialiser la synchro montre ?",
+                "confirmDescription": "Cela efface l'état de synchronisation de la montre sur l'iPhone. Tes séances ne seront pas supprimées.",
+                "successTitle": "Synchro montre réinitialisée",
+                "successDescription": "La synchronisation a été réinitialisée. Rouvre l'app sur la montre si elle ne se reconnecte pas toute seule."
+            }
+        },
+        "watch": {
+            "title": "Montre"
+        },
+        "help": {
+            "title": "Aide",
+            "items": {
+                "reportProblem": {
+                    "title": "Signaler un problème"
+                },
+                "sendFeedback": {
+                    "title": "Envoyer un avis"
+                }
+            }
+        },
+        "supportSkulpt": {
+            "title": "Soutenir Skulpt",
+            "items": {
+                "tellFriend": {
+                    "title": "En parler à un ami"
+                },
+                "reviewAppStore": {
+                    "title": "Noter sur l'App Store",
+                    "message": "Voici mon appli préférée pour noter mes séances : {{url}}"
+                }
+            }
+        },
+        "catalogCredit": "Catalogue d'exercices : hasaneyldrm/exercises-dataset (MIT)"
+    },
+    "notifications": {
+        "title": "Notifications",
+        "description": "Nous t'envoyons des notifications pour tes séances et tes exercices : alertes de durée de série, fin du repos, suggestions d'exercices, etc."
+    },
+    "autolock": {
+        "title": "Verrouillage auto",
+        "description": "ACTIVÉ : l'écran ne s'assombrit pas et ne se verrouille pas pendant une séance. DÉSACTIVÉ : l'écran se verrouille selon les réglages du téléphone."
+    },
+    "units": {
+        "title": "Unités",
+        "bodyWeightUnits": "Poids de corps",
+        "measurementUnits": "Mensurations",
+        "weightUnits": "Poids",
+        "distanceUnits": "Distance",
+        "description": "Les unités de poids et de distance choisies servent dans les stats et par défaut pour les nouveaux exercices.",
+        "exerciseUnits": "Tu peux changer l'unité d'un exercice dans « Exercice → Modifier »."
+    },
+    "datetime": {
+        "firstWeekday": "Premier jour de la semaine",
+        "timeFormat": "Format de l'heure"
+    },
+    "sound": {
+        "playSounds": "Jouer les sons",
+        "testSound": "Tester"
+    },
+    "heartrate": {
+        "title": "Fréquence cardiaque",
+        "description": "Choisis une formule pour calculer ta fréquence cardiaque maximale (FC max). Les zones cardiaques servent à suivre l'intensité des séances.",
+        "biologicalSex": "Sexe biologique",
+        "activityLevel": "Niveau d'activité",
+        "unset": "Non renseigné",
+        "formula": "Formule FC max",
+        "formulas": {
+            "nes": "211 - (0,64 x âge)",
+            "fox": "220 - âge",
+            "tanaka": "208 - (0,7 x âge)",
+            "inbar": "205,8 - (0,685 x âge)",
+            "gulati": "206 - (0,88 x âge)",
+            "gellishLegacy": "207 - (0,7 x âge) [ancienne]",
+            "manual": "Manuelle"
+        },
+        "biologicalSexOptions": {
+            "female": "Femme",
+            "male": "Homme",
+            "other": "Autre"
+        },
+        "activityLevelOptions": {
+            "sedentary": "Sédentaire",
+            "active": "Actif",
+            "trained": "Entraîné"
+        },
+        "manualMhr": "FC max",
+        "birthday": "Date de naissance",
+        "bpm": "bpm",
+        "calculatedMhr": "FC max",
+        "zones": {
+            "zone0": "Zone 0 — Sous les zones",
+            "zone1": "Zone 1 — Échauffement",
+            "zone2": "Zone 2 — Endurance",
+            "zone3": "Zone 3 — Cardio",
+            "zone4": "Zone 4 — Seuil",
+            "zone5": "Zone 5 — Maximum"
+        }
+    },
+    "training": {
+        "notes": {
+            "title": "Réglages machine",
+            "add": "Ajouter les réglages machine",
+            "placeholder": "Salle A : siège 4, dossier 2\nSalle B : siège 6",
+            "hint": "Une ligne par salle, ex. « Salle A : siège 4 ». Touche une salle pour la mettre en avant.",
+            "edit": "Modifier les réglages machine"
+        },
+        "previous": "Précédent",
+        "restBar": {
+            "title": "Repos",
+            "skip": "Passer",
+            "minus": "Retirer 15 secondes",
+            "plus": "Ajouter 15 secondes"
+        },
+        "keypad": {
+            "hide": "Masquer le pavé",
+            "next": "Champ suivant",
+            "delete": "Effacer",
+            "decimal": "Virgule",
+            "increase": "Augmenter",
+            "decrease": "Diminuer",
+            "weight": "Poids",
+            "reps": "Répétitions",
+            "set": "Série {{number}}",
+            "rep": "rép."
+        }
+    }
+}

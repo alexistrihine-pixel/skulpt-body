@@ -5,6 +5,7 @@ import { Image as ExpoImage } from 'expo-image';
 
 import { Box } from '@/components/primitives/box';
 import { buildExerciseGifUrl, EXERCISE_GIF_PREVIEW_RESOLUTION } from '@/constants/skulpt';
+import { toImageSource } from '@/helpers/exercise-image-source';
 
 import { Header } from './components/header';
 
@@ -33,16 +34,19 @@ const normalizeParam = (value: string | string[] | undefined): string => {
 };
 
 const PreviewScreen: FC = () => {
-    const { gifFilename, name } = useLocalSearchParams<{
+    const { gifFilename, imageUri, name } = useLocalSearchParams<{
         gifFilename?: string | string[];
+        imageUri?: string | string[];
         name?: string;
     }>();
 
     const gifUrl = useMemo(() => {
+        const photo = normalizeParam(imageUri);
+        if (photo) return photo;
         const filename = normalizeParam(gifFilename);
         if (!filename) return '';
         return buildExerciseGifUrl(filename, EXERCISE_GIF_PREVIEW_RESOLUTION);
-    }, [gifFilename]);
+    }, [gifFilename, imageUri]);
 
     const handleClose = () => {
         router.back();
@@ -54,7 +58,7 @@ const PreviewScreen: FC = () => {
             {gifUrl ? (
                 <Box style={styles.gifContainer}>
                     <ExpoImage
-                        source={{ uri: gifUrl }}
+                        source={toImageSource(gifUrl)}
                         style={styles.gifImage}
                         contentFit="contain"
                         autoplay

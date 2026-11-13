@@ -47,6 +47,10 @@ export const exercise = sqliteTable('exercise', {
     mistakes: text('mistakes', { mode: 'json' }).$type<string[]>(),
     instructions: text('instructions', { mode: 'json' }).$type<string[]>(),
     description: text('description'),
+    // Personal notes shown during workouts (e.g. machine settings per gym).
+    userNotes: text('user_notes'),
+    // Local file:// URI of a user photo (copied into the app's document directory).
+    imageUri: text('image_uri'),
     difficulty: text('difficulty'),
     gifFilename: text('gif_filename'),
     muscleLoad: text('muscle_load', { mode: 'json' }).$type<ExerciseMuscleLoadProfile>(),

@@ -210,6 +210,7 @@ const resolveNumberLocale = (language: string | undefined): string => {
     if (normalized.startsWith('es')) return 'es-ES';
     if (normalized.startsWith('hi')) return 'hi-IN';
     if (normalized.startsWith('zh')) return 'zh-CN';
+    if (normalized.startsWith('fr')) return 'fr-FR';
     return 'en-US';
 };
 

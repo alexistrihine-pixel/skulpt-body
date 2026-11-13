@@ -11,6 +11,7 @@ import { VStack } from '@/components/primitives/vstack';
 import { HStack } from '@/components/primitives/hstack';
 import { normalizeMuscleValues } from '@/constants/muscles';
 import { buildExerciseGifUrl } from '@/constants/skulpt';
+import { toImageSource } from '@/helpers/exercise-image-source';
 
 interface HeaderProps {
     exercise: ExerciseSelect;
@@ -65,9 +66,10 @@ export const Header = ({ exercise }: HeaderProps) => {
     const [aspectRatio, setAspectRatio] = useState<number>(1);
 
     const gifUrl = useMemo(() => {
+        if (exercise.imageUri) return exercise.imageUri;
         if (!exercise.gifFilename) return null;
         return buildExerciseGifUrl(exercise.gifFilename, 1080);
-    }, [exercise.gifFilename]);
+    }, [exercise.gifFilename, exercise.imageUri]);
 
     return (
         <Box style={styles.wrapper}>
@@ -79,7 +81,7 @@ export const Header = ({ exercise }: HeaderProps) => {
                 </Box>
                 {gifUrl && (
                     <ExpoImage
-                        source={{ uri: gifUrl }}
+                        source={toImageSource(gifUrl)}
                         style={[styles.gifImage, { aspectRatio }]}
                         contentFit="contain"
                         autoplay

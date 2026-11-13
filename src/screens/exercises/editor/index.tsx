@@ -1,4 +1,4 @@
-import { FC, Fragment, useEffect, useMemo } from 'react';
+import { FC, Fragment, useEffect, useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { StyleSheet } from 'react-native-unistyles';
 import { useForm } from 'react-hook-form';
@@ -21,6 +21,8 @@ import { SheetChoices } from '@/components/forms/fields/sheet/choices';
 import { useUser } from '@/hooks/use-user';
 import { useAnalytics } from '@/hooks/use-analytics';
 import { createExercise, getExerciseLibrarySnapshot, isSkulptExercise } from '@/crud/exercise';
+import { deleteExerciseImage, persistExerciseImage } from '@/helpers/exercise-image';
+import { PhotoField } from './components/photo';
 import { getExerciseLibraryProperties } from '@/analytics/helpers';
 import { queryClient } from '@/queries';
 import { Label } from '@/components/forms/label';
@@ -493,6 +495,8 @@ const EditorForm: FC<EditorFormProps> = ({ existingExercise }) => {
         },
     });
 
+    const [photoUri, setPhotoUri] = useState<string | null>(existingExercise?.imageUri ?? null);
+
     const createExerciseMutation = useMutation({
         mutationFn: async (data: Parameters<typeof createExercise>[0]) => {
             const created = await createExercise(data);
@@ -521,6 +525,18 @@ const EditorForm: FC<EditorFormProps> = ({ existingExercise }) => {
             return;
         }
 
+        // Copy a newly picked photo into the app's storage before saving its URI.
+        const previousImageUri = existingExercise?.imageUri ?? null;
+        let imageUri: string | null = photoUri;
+        if (photoUri && photoUri !== previousImageUri) {
+            try {
+                imageUri = await persistExerciseImage(photoUri);
+            } catch (error) {
+                reportError(error, 'Failed to save exercise photo:');
+                imageUri = previousImageUri;
+            }
+        }
+
         const normalizedMuscleGroups = sanitizeMuscleGroupSelections({
             primary: payload.primaryMuscleGroups,
             secondary: payload.secondaryMuscleGroups,
@@ -545,6 +561,7 @@ const EditorForm: FC<EditorFormProps> = ({ existingExercise }) => {
             equipment: normalizeStringListValue(payload.equipmentText, /[,\n]+/),
             mistakes: normalizeStringListValue(payload.mistakesText, /[,\n]+/),
             instructions: normalizeStringListValue(payload.instructionsText, /[,\n]+/),
+            imageUri,
         };
 
         if (isEdit && existingExercise) {
@@ -557,6 +574,9 @@ const EditorForm: FC<EditorFormProps> = ({ existingExercise }) => {
                 },
                 {
                     onSuccess: (savedExercise) => {
+                        if (previousImageUri && previousImageUri !== imageUri) {
+                            deleteExerciseImage(previousImageUri);
+                        }
                         if (
                             isSkulptExercise(existingExercise) &&
                             savedExercise.id !== existingExercise.id
@@ -674,6 +694,10 @@ const EditorForm: FC<EditorFormProps> = ({ existingExercise }) => {
                 <VStack style={styles.fieldContainer}>
                     <Label>{t('exercise-create.name', { ns: 'screens' })}</Label>
                     <Input control={control} name="name" valueType="text" error={errors.name} />
+                </VStack>
+                <VStack style={styles.fieldContainer}>
+                    <Label>{t('exercise-create.photo', { ns: 'screens' })}</Label>
+                    <PhotoField value={photoUri} onChange={setPhotoUri} />
                 </VStack>
                 <VStack style={styles.fieldContainer}>
                     <Label>{t('exercise-create.category', { ns: 'screens' })}</Label>

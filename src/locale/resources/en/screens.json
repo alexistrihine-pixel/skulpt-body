@@ -11,7 +11,11 @@
                 "title": "Plan",
                 "description": "Your first workout"
             }
-        }
+        },
+        "exercisesCount_one": "{{count}} exercise",
+        "exercisesCount_other": "{{count}} exercises",
+        "setsCount_one": "{{count}} set",
+        "setsCount_other": "{{count}} sets"
     },
     "results": {
         "title": "Results",
@@ -230,7 +234,14 @@
         "timeHalfwayAlert": "Halfway alert",
         "muscleGroups": "Muscle Groups",
         "primaryMuscleGroup": "Primary",
-        "secondaryMuscleGroup": "Secondary"
+        "secondaryMuscleGroup": "Secondary",
+        "photo": "Photo",
+        "photoCamera": "Take a photo",
+        "photoLibrary": "Choose from gallery",
+        "photoRemove": "Remove photo",
+        "photoPermissionTitle": "Camera access needed",
+        "photoPermission": "Allow camera access in the settings to take a photo of this exercise.",
+        "photoOpenSettings": "Open settings"
     },
     "workout-editor": {
         "name": "Name",
@@ -393,7 +404,8 @@
                     "message": "Here's my favorite workout logging app: {{url}}"
                 }
             }
-        }
+        },
+        "catalogCredit": "Exercise catalogue: hasaneyldrm/exercises-dataset (MIT)"
     },
     "notifications": {
         "title": "Notifications",
@@ -457,6 +469,34 @@
             "zone3": "Zone 3 — Cardio",
             "zone4": "Zone 4 — Peak",
             "zone5": "Zone 5 — Max"
+        }
+    },
+    "training": {
+        "notes": {
+            "title": "Machine settings",
+            "add": "Add machine settings",
+            "placeholder": "Gym A: seat 4, back 2\nGym B: seat 6",
+            "hint": "One line per gym, e.g. \"Gym A: seat 4\". Tap a gym to highlight it.",
+            "edit": "Edit machine settings"
+        },
+        "previous": "Previous",
+        "restBar": {
+            "title": "Rest",
+            "skip": "Skip",
+            "minus": "Remove 15 seconds",
+            "plus": "Add 15 seconds"
+        },
+        "keypad": {
+            "hide": "Hide keypad",
+            "next": "Next field",
+            "delete": "Delete",
+            "decimal": "Decimal point",
+            "increase": "Increase",
+            "decrease": "Decrease",
+            "weight": "Weight",
+            "reps": "Reps",
+            "set": "Set {{number}}",
+            "rep": "rep"
         }
     }
 }

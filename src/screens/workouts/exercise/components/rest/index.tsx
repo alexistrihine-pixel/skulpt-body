@@ -18,7 +18,7 @@ interface RestProps {
 
 const styles = StyleSheet.create((theme) => ({
     restContainer: (isTimerActive: boolean) => ({
-        backgroundColor: isTimerActive ? theme.colors.lime[400] : 'transparent',
+        backgroundColor: isTimerActive ? theme.colors.accent : 'transparent',
         paddingHorizontal: theme.space(2),
         paddingVertical: theme.space(0.5),
         borderRadius: theme.radius.lg,

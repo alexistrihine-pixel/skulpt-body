@@ -13,7 +13,7 @@ const styles = StyleSheet.create((theme) => ({
     container: {
         height: theme.space(11),
         width: theme.space(11),
-        backgroundColor: theme.colors.lime[500],
+        backgroundColor: theme.colors.accentStrong,
         borderRadius: theme.radius.full,
         justifyContent: 'center',
         alignItems: 'center',

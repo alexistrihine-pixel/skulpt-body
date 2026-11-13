@@ -1,0 +1,1 @@
+ALTER TABLE `exercise` ADD `image_uri` text;
