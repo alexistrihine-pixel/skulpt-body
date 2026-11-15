@@ -62,6 +62,7 @@ import {
 import { reportError, runInBackground } from '@/services/error-reporting';
 import { usePostWorkoutAppReviewPrompt } from '@/hooks/use-app-review-prompt';
 import { useAnalytics } from '@/hooks/use-analytics';
+import { resolveRestTime } from '@/stores/rest-settings';
 
 type ProviderReturn = ReturnType<typeof useRunningWorkoutProvider>;
 
@@ -1297,7 +1298,7 @@ const useRunningWorkoutProvider = () => {
                     setType: runningWorkoutActiveSet.type,
                     source: commandSource,
                 });
-                const restTime = runningWorkoutActiveSet.restTime;
+                const restTime = resolveRestTime(runningWorkoutActiveSet.restTime);
                 if ((!restTime || restTime <= 0) && workoutDetails) {
                     await startNextSetOrExercise(
                         runningWorkoutActiveSet,

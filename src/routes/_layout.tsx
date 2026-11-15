@@ -39,6 +39,8 @@ import 'dayjs/locale/hi';
 import 'dayjs/locale/fr';
 import { AudioProvider } from '@/hooks/use-audio';
 import { seedExerciseCatalog } from '@/services/exercise-catalog';
+import { seedRoutinesIfNeeded } from '@/crud/routine';
+import { reportError } from '@/services/error-reporting';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -84,9 +86,13 @@ const App: FC = () => {
     const userId = user?.id;
     useEffect(() => {
         if (!userId) return;
-        seedExerciseCatalog().then((count) => {
-            if (count > 0) queryClient.invalidateQueries();
-        });
+        seedExerciseCatalog()
+            .then((count) => {
+                if (count > 0) queryClient.invalidateQueries();
+            })
+            .then(() => seedRoutinesIfNeeded())
+            .then(() => queryClient.invalidateQueries({ queryKey: ['routines'] }))
+            .catch((error) => reportError(error, 'Failed to seed routines:'));
     }, [userId]);
 
     if (!user) return null;
@@ -105,6 +111,7 @@ const App: FC = () => {
                         >
                             <Stack.Screen name="(tabs)" />
                             <Stack.Screen name="workout" />
+                            <Stack.Screen name="routine" />
                             <Stack.Screen name="settings" />
                             <Stack.Screen
                                 name="editor"

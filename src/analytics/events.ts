@@ -294,4 +294,7 @@ export type AnalyticsScreenName =
     | 'settings_sound'
     | 'settings_theme'
     | 'settings_units'
+    | 'settings_rest'
+    | 'routines'
+    | 'routine_editor'
     | 'not_found';

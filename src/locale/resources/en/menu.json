@@ -10,5 +10,8 @@
     },
     "settings": {
         "title": "Settings"
+    },
+    "routines": {
+        "title": "Workouts"
     }
 }

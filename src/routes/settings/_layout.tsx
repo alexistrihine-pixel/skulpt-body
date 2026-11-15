@@ -48,6 +48,12 @@ export default function SettingsLayout() {
                 }}
             />
             <Stack.Screen
+                name="rest"
+                options={{
+                    headerTitle: t('settings.items.rest.title', { ns: 'screens' }),
+                }}
+            />
+            <Stack.Screen
                 name="sound"
                 options={{
                     headerTitle: t('settings.items.sound.title', { ns: 'screens' }),

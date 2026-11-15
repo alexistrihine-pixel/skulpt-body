@@ -377,6 +377,19 @@
                 "confirmDescription": "This clears cached watch sync state on iPhone. Workouts data will not be deleted.",
                 "successTitle": "Watch Sync Reset",
                 "successDescription": "Sync state was reset. Reopen the Watch app if it does not reconnect automatically."
+            },
+            "rest": {
+                "title": "Rest timer",
+                "default": "DEFAULT REST",
+                "unit": "min",
+                "hint": "Used for every exercise and every set, unless you pick another time for an exercise in a workout.",
+                "autoStart": "Start after each completed set",
+                "autoStartHint": "The timer starts as soon as you complete a set",
+                "overrides": "EXERCISES WITH ANOTHER TIME",
+                "overridesEmpty": "None: every exercise uses the default time.",
+                "resetAll": "Set every exercise back to {{time}}",
+                "minus": "Remove 15 seconds",
+                "plus": "Add 15 seconds"
             }
         },
         "watch": {
@@ -497,6 +510,72 @@
             "reps": "Reps",
             "set": "Set {{number}}",
             "rep": "rep"
+        }
+    },
+    "routines": {
+        "title": "Workouts",
+        "summary_one": "{{count}} workout",
+        "summary_other": "{{count}} workouts",
+        "start": "Start workout",
+        "starting": "Starting…",
+        "lastDone": "last: {{date}}",
+        "neverDone": "never done",
+        "empty": {
+            "title": "No workouts yet",
+            "description": "Create a workout to start it in one tap at the gym.",
+            "button": "New workout"
+        },
+        "menu": {
+            "edit": "Edit workout",
+            "duplicate": "Duplicate",
+            "updateFromLast": "Update from last completed workout",
+            "delete": "Delete",
+            "deleteTitle": "Delete “{{name}}”?",
+            "deleteDescription": "Your history is not affected.",
+            "updateTitle": "Update “{{name}}”?",
+            "updateDescription": "Exercises and sets will be replaced by those of your last “{{name}}” workout.",
+            "updateMissing": "No completed workout has this name.",
+            "confirm": "Confirm",
+            "cancel": "Cancel"
+        },
+        "running": {
+            "title": "A workout is already running",
+            "description": "Finish or delete it before starting another one.",
+            "open": "Open running workout",
+            "close": "Close"
+        },
+        "editor": {
+            "titleNew": "New workout",
+            "titleEdit": "Edit workout",
+            "name": "WORKOUT NAME",
+            "namePlaceholder": "e.g. Upper A",
+            "save": "Save",
+            "cancel": "Cancel",
+            "addExercise": "+ Add exercise",
+            "addSet": "+ Add set",
+            "set": "SET",
+            "lastTime": "LAST TIME",
+            "kg": "KG",
+            "reps": "REPS",
+            "warmup": "W",
+            "dropset": "D",
+            "failure": "F",
+            "rest": "Rest {{time}}",
+            "restNone": "No rest",
+            "restDefault": "default",
+            "restNoneOption": "None",
+            "restTitle": "Rest · {{name}}",
+            "restHint": "Starts automatically when you complete a set",
+            "moveUp": "Move up",
+            "moveDown": "Move down",
+            "removeExercise": "Remove exercise",
+            "removeSet": "Delete set {{n}}",
+            "start": "Start workout",
+            "discardTitle": "Discard changes?",
+            "discardDescription": "Your changes will not be saved.",
+            "discard": "Discard",
+            "keep": "Keep editing",
+            "emptyExercises": "Add exercises to this workout."
         }
     }
 }

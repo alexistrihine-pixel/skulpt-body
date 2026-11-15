@@ -16,6 +16,7 @@ import {
 } from '@/db/schema';
 import { nanoid } from '@/helpers/nanoid';
 import { isRestActive } from '@/helpers/rest';
+import { resolveRestTime } from '@/stores/rest-settings';
 import { normalizeSetType } from '@/helpers/set-type';
 import { reportError } from '@/services/error-reporting';
 import { SKULPT_EXERCISES_USER_ID, isSkulptExerciseUserId } from '@/constants/skulpt';
@@ -892,6 +893,28 @@ export const updateExerciseSetWithRestCalculation = async (
             }
         } catch (error) {
             reportError(error, 'Failed to apply completed workout rest defaults to exercise set:');
+        }
+    }
+
+    // Sets without their own rest time get the default rest (Settings > Rest timer) as soon as
+    // they start or are completed in a running workout, so the rest timer always runs.
+    if (
+        existingSet &&
+        !existingSet.completedAt &&
+        (existingSet.restTime === null || existingSet.restTime === undefined) &&
+        !Object.prototype.hasOwnProperty.call(updatedData, 'restTime') &&
+        (updatedData.startedAt || updatedData.completedAt)
+    ) {
+        try {
+            const parentWorkout = await getParentWorkoutForWorkoutExercise(
+                existingSet.workoutExerciseId,
+            );
+            const defaultRest = resolveRestTime(null);
+            if (parentWorkout?.status === 'in_progress' && defaultRest && defaultRest > 0) {
+                updatedData.restTime = defaultRest;
+            }
+        } catch (error) {
+            reportError(error, 'Failed to apply default rest time to exercise set:');
         }
     }
 

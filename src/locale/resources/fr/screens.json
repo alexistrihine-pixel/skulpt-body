@@ -377,6 +377,19 @@
                 "confirmDescription": "Cela efface l'état de synchronisation de la montre sur l'iPhone. Tes séances ne seront pas supprimées.",
                 "successTitle": "Synchro montre réinitialisée",
                 "successDescription": "La synchronisation a été réinitialisée. Rouvre l'app sur la montre si elle ne se reconnecte pas toute seule."
+            },
+            "rest": {
+                "title": "Minuteur de repos",
+                "default": "REPOS PAR DÉFAUT",
+                "unit": "min",
+                "hint": "Utilisé pour tous les exercices et toutes les séries, sauf si tu choisis un autre temps pour un exercice dans une séance.",
+                "autoStart": "Lancer après chaque série validée",
+                "autoStartHint": "Le chrono démarre dès que tu valides une série",
+                "overrides": "EXERCICES AVEC UN AUTRE TEMPS",
+                "overridesEmpty": "Aucun : tous les exercices utilisent le temps par défaut.",
+                "resetAll": "Remettre tous les exercices sur {{time}}",
+                "minus": "Retirer 15 secondes",
+                "plus": "Ajouter 15 secondes"
             }
         },
         "watch": {
@@ -497,6 +510,72 @@
             "reps": "Répétitions",
             "set": "Série {{number}}",
             "rep": "rép."
+        }
+    },
+    "routines": {
+        "title": "Séances",
+        "summary_one": "{{count}} séance",
+        "summary_other": "{{count}} séances",
+        "start": "Commencer la séance",
+        "starting": "Lancement…",
+        "lastDone": "dernière : {{date}}",
+        "neverDone": "jamais faite",
+        "empty": {
+            "title": "Aucune séance",
+            "description": "Crée une séance pour la lancer en un geste à la salle.",
+            "button": "Nouvelle séance"
+        },
+        "menu": {
+            "edit": "Modifier la séance",
+            "duplicate": "Dupliquer",
+            "updateFromLast": "Mettre à jour depuis la dernière séance faite",
+            "delete": "Supprimer",
+            "deleteTitle": "Supprimer « {{name}} » ?",
+            "deleteDescription": "Ton historique n'est pas touché.",
+            "updateTitle": "Mettre à jour « {{name}} » ?",
+            "updateDescription": "Les exercices et séries seront remplacés par ceux de ta dernière séance « {{name}} ».",
+            "updateMissing": "Aucune séance terminée ne porte ce nom.",
+            "confirm": "Confirmer",
+            "cancel": "Annuler"
+        },
+        "running": {
+            "title": "Une séance est déjà en cours",
+            "description": "Termine-la ou supprime-la avant d'en lancer une autre.",
+            "open": "Ouvrir la séance en cours",
+            "close": "Fermer"
+        },
+        "editor": {
+            "titleNew": "Nouvelle séance",
+            "titleEdit": "Modifier la séance",
+            "name": "NOM DE LA SÉANCE",
+            "namePlaceholder": "Ex. Upper 1 Dos/pecs",
+            "save": "Enregistrer",
+            "cancel": "Annuler",
+            "addExercise": "+ Ajouter un exercice",
+            "addSet": "+ Ajouter une série",
+            "set": "SÉRIE",
+            "lastTime": "DERNIÈRE FOIS",
+            "kg": "KG",
+            "reps": "REPS",
+            "warmup": "É",
+            "dropset": "D",
+            "failure": "F",
+            "rest": "Repos {{time}}",
+            "restNone": "Sans repos",
+            "restDefault": "par défaut",
+            "restNoneOption": "Aucun",
+            "restTitle": "Repos · {{name}}",
+            "restHint": "Lancé automatiquement quand tu valides une série",
+            "moveUp": "Monter",
+            "moveDown": "Descendre",
+            "removeExercise": "Retirer l'exercice",
+            "removeSet": "Supprimer la série {{n}}",
+            "start": "Commencer la séance",
+            "discardTitle": "Abandonner les modifications ?",
+            "discardDescription": "Tes changements ne seront pas enregistrés.",
+            "discard": "Abandonner",
+            "keep": "Continuer",
+            "emptyExercises": "Ajoute des exercices à cette séance."
         }
     }
 }

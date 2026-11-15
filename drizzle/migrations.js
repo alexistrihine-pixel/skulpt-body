@@ -24,6 +24,7 @@ import m0019 from './0019_nebulous_shape.sql';
 import m0020 from './0020_blue_lady_ursula.sql';
 import m0021 from './0021_true_timeslip.sql';
 import m0022 from './0022_nifty_franklin_storm.sql';
+import m0023 from './0023_curved_scalphunter.sql';
 
   export default {
     journal,
@@ -50,7 +51,8 @@ m0018,
 m0019,
 m0020,
 m0021,
-m0022
+m0022,
+m0023
     }
   }
   

@@ -32,6 +32,7 @@ import { getExecutionOrderSets } from '@/helpers/execution-order';
 import { startNextSetOrExercise } from '@/services/set-transitions';
 import { useRunningWorkoutStatic } from '@/hooks/use-running-workout';
 import { addWorkoutExerciseSet } from '../../helpers/add-set';
+import { resolveRestTime } from '@/stores/rest-settings';
 
 interface ActionsProps {
     workoutDetails: ReturnType<typeof useWorkoutWithDetails>['data'];
@@ -268,7 +269,7 @@ export const Actions: FC<ActionsProps> = ({
 
                         // If this set has no rest time, auto-start the next set
                         // (checkAndStartAfterRest only handles sets WITH rest time)
-                        const restTime = workoutInfo.currentSet.restTime;
+                        const restTime = resolveRestTime(workoutInfo.currentSet.restTime);
                         if (!restTime || restTime <= 0) {
                             await startNextSetOrExercise(
                                 workoutInfo.currentSet,

@@ -7,6 +7,7 @@ import { useScreen } from '@/hooks/use-screen';
 import { useHomeTab } from '@/screens/home/hooks';
 import { useSettingsTab } from '@/screens/settings/settings/hooks';
 import { useResultsTab } from '@/screens/results/results/hooks';
+import { useRoutinesTab } from '@/screens/routines/list/hooks';
 
 export default function TabLayout() {
     const { options } = useScreen();
@@ -15,6 +16,7 @@ export default function TabLayout() {
     const exercises = useExercisesTab();
     const settings = useSettingsTab();
     const results = useResultsTab();
+    const routines = useRoutinesTab();
 
     return (
         <Tabs
@@ -26,6 +28,7 @@ export default function TabLayout() {
             }}
         >
             <Tabs.Screen {...home} />
+            <Tabs.Screen {...routines} />
             <Tabs.Screen {...results} />
             <Tabs.Screen {...exercises} />
             <Tabs.Screen {...settings} />

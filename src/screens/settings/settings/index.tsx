@@ -20,6 +20,7 @@ import {
     MessageCircle,
     Star,
     Undo2,
+    Timer,
 } from 'lucide-react-native';
 
 import { Title } from '@/components/typography/title';
@@ -210,6 +211,11 @@ const SettingsScreen = () => {
             icon: Sun,
             title: t('settings.items.theme.title', { ns: 'screens' }),
             onPress: () => router.navigate('/settings/theme'),
+        },
+        {
+            icon: Timer,
+            title: t('settings.items.rest.title', { ns: 'screens' }),
+            onPress: () => router.navigate('/settings/rest' as any),
         },
         {
             icon: Volume2,

@@ -31,6 +31,7 @@ import {
 } from '@/analytics/helpers';
 import { useFilterStore, hasActiveFilters, countActiveFilters } from '@/stores/filter';
 import { useShallow } from 'zustand/shallow';
+import { useRoutineDraftStore } from '@/stores/routine-draft';
 
 type SelectedList = string[];
 
@@ -104,11 +105,15 @@ const styles = StyleSheet.create((theme, rt) => ({
 const SelectExercisesScreen: FC = () => {
     const { t } = useTranslation(['common', 'screens']);
 
-    const { workoutId, merge, sourceExerciseId } = useLocalSearchParams<{
+    const { workoutId, merge, sourceExerciseId, routine } = useLocalSearchParams<{
         workoutId?: string;
         merge?: string;
         sourceExerciseId?: string;
+        routine?: string;
     }>();
+
+    const isRoutineMode = routine === '1';
+    const addPendingRoutineExercises = useRoutineDraftStore((s) => s.addPending);
 
     const isMergeMode = merge === 'true' && !!sourceExerciseId;
 
@@ -200,6 +205,12 @@ const SelectExercisesScreen: FC = () => {
             setSubmitting(false);
         }
     }, [sourceExerciseId, selected, submitting, mergeExercise]);
+
+    const handleAddToRoutine = useCallback(() => {
+        if (selected.length === 0) return;
+        addPendingRoutineExercises(selected);
+        router.back();
+    }, [selected, addPendingRoutineExercises]);
 
     const handleAdd = useCallback(async () => {
         if (!workoutId || selected.length === 0 || submitting) return;
@@ -351,7 +362,7 @@ const SelectExercisesScreen: FC = () => {
         ? t('merge', { ns: 'common' })
         : t('add', { ns: 'common' });
 
-    const handleAction = isMergeMode ? handleMerge : handleAdd;
+    const handleAction = isMergeMode ? handleMerge : isRoutineMode ? handleAddToRoutine : handleAdd;
 
     return (
         <Box style={styles.container}>
