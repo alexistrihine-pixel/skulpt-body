@@ -1,6 +1,6 @@
 import { FC, useCallback } from 'react';
 import { Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -20,6 +20,7 @@ const SET_TYPES: SetType[] = ['working', 'failure', 'dropset', 'warmup'];
 const WorkoutExerciseMenu: FC = () => {
     const { t } = useTranslation(['common', 'screens']);
     const router = useRouter();
+    const pathname = usePathname();
 
     const { close, payload } = useActionsStore(
         useShallow((state) => ({
@@ -80,14 +81,15 @@ const WorkoutExerciseMenu: FC = () => {
                             id: workoutExerciseId,
                             workoutId,
                         });
-                        router.back();
+                        // Only the single-exercise screen closes; the workout list stays.
+                        if (pathname.split('/').filter(Boolean).length >= 3) router.back();
                     } catch {
                         // deleteWorkoutExercise reports the underlying error.
                     }
                 },
             },
         ]);
-    }, [close, deleteWorkoutExercise, router, t, workoutExerciseId, workoutId]);
+    }, [close, deleteWorkoutExercise, pathname, router, t, workoutExerciseId, workoutId]);
 
     if (!workoutId || !workoutExerciseId) return null;
 

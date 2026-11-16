@@ -1,4 +1,5 @@
 import { FC, ReactNode, useCallback, useEffect, useMemo } from 'react';
+import { BackHandler } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import * as Haptics from 'expo-haptics';
@@ -150,6 +151,16 @@ export const Keypad: FC<KeypadProps> = ({
 
     // Never leave the pad open when the screen goes away.
     useEffect(() => () => useKeypadStore.getState().close(), []);
+
+    // Android back closes the pad instead of leaving the screen.
+    useEffect(() => {
+        if (!target) return;
+        const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+            close();
+            return true;
+        });
+        return () => sub.remove();
+    }, [target, close]);
 
     const commit = useCallback(
         (next: string) => {

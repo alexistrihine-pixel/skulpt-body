@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Box } from '@/components/primitives/box';
 import { ScrollView } from '@/components/primitives/scrollview';
 import { useExercise, useExerciseHistory } from '@/hooks/use-exercises';
-import { Header, History, Guide, Tabs, Statistics } from './components';
+import { Header, History, Guide, Tabs, Statistics, Progress, hasProgress } from './components';
 import { LoadingState } from '../exercises/components/loading';
 import { EmptyState } from '../exercises/components/empty';
 import { useAnalytics } from '@/hooks/use-analytics';
@@ -47,15 +47,20 @@ const ExerciseScreen: FC = () => {
         return <EmptyState />;
     }
 
-    const tabs = [
-        t('exercise.tabs.history', { ns: 'screens' }),
-        t('exercise.tabs.statistics', { ns: 'screens' }),
-        t('exercise.tabs.guide', { ns: 'screens' }),
-    ];
+    // Progression comes first (and is the default) for weight x reps exercises.
+    const withProgress = hasProgress(exercise);
+    const tabKeys = [
+        ...(withProgress ? (['progress'] as const) : []),
+        'history',
+        'statistics',
+        'guide',
+    ] as const;
+    const tabs = tabKeys.map((key) => t(`exercise.tabs.${key}`, { ns: 'screens' }));
+    const activeKey = tabKeys[activeTab] ?? tabKeys[0];
 
     const handleTabChange = (index: number) => {
         setActiveTab(index);
-        if (index === 1 && activeTab !== 1) {
+        if (tabKeys[index] === 'statistics' && activeKey !== 'statistics') {
             track('exercise:statistics_viewed', {
                 ownership: isSkulptExerciseUserId(exercise.userId) ? 'system' : 'custom',
                 category: exercise.category,
@@ -76,9 +81,14 @@ const ExerciseScreen: FC = () => {
             <ScrollView contentContainerStyle={styles.content}>
                 <Header exercise={exercise} />
                 <Tabs tabs={tabs} activeIndex={activeTab} onTabChange={handleTabChange} />
-                {activeTab === 0 && <History history={history || []} exercise={exercise} />}
-                {activeTab === 1 && <Statistics history={history || []} exercise={exercise} />}
-                {activeTab === 2 && <Guide exercise={exercise} />}
+                {activeKey === 'progress' && (
+                    <Progress history={history || []} exercise={exercise} />
+                )}
+                {activeKey === 'history' && <History history={history || []} exercise={exercise} />}
+                {activeKey === 'statistics' && (
+                    <Statistics history={history || []} exercise={exercise} />
+                )}
+                {activeKey === 'guide' && <Guide exercise={exercise} />}
             </ScrollView>
         </Box>
     );

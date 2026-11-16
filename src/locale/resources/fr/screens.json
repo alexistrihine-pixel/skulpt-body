@@ -15,7 +15,12 @@
         "exercisesCount_one": "{{count}} exercice",
         "exercisesCount_other": "{{count}} exercices",
         "setsCount_one": "{{count}} série",
-        "setsCount_other": "{{count}} séries"
+        "setsCount_other": "{{count}} séries",
+        "next": {
+            "title": "Prochaine séance",
+            "lastDone": "Dernière fois {{date}}",
+            "neverDone": "Jamais faite"
+        }
     },
     "results": {
         "title": "Résultats",
@@ -135,7 +140,8 @@
         "tabs": {
             "history": "Historique",
             "guide": "Guide",
-            "statistics": "Stats"
+            "statistics": "Stats",
+            "progress": "Progression"
         },
         "history": {
             "empty": {
@@ -215,6 +221,22 @@
                     }
                 }
             }
+        },
+        "progress": {
+            "periods": {
+                "1m": "1 M",
+                "3m": "3 M",
+                "1y": "1 an",
+                "all": "Tout"
+            },
+            "oneRm": "1RM estimé",
+            "change": "{{value}} depuis le {{date}}",
+            "single": "Une seule séance sur la période",
+            "empty": "Aucune série avec charge sur la période",
+            "records": "Records",
+            "bestSet": "Meilleure série",
+            "bestVolume": "Volume sur une séance",
+            "recent": "Dernières séances"
         }
     },
     "exercise-create": {
@@ -316,6 +338,18 @@
             "distance": "Distance",
             "pace": "Allure",
             "cadence": "Cadence"
+        },
+        "list": {
+            "current": "En cours · {{done}} sur {{total}} séries",
+            "superset": "Superset",
+            "exerciseMenu": "Options de l'exercice",
+            "rest": "Repos {{time}}",
+            "noRest": "Pas de repos",
+            "addSet": "Ajouter une série",
+            "addExercise": "Ajouter un exercice",
+            "duration": "Durée",
+            "volume": "Volume",
+            "sets": "Séries"
         }
     },
     "workoutExercise": {
@@ -354,7 +388,30 @@
                 "title": "Thème",
                 "auto": "Système",
                 "light": "Clair",
-                "dark": "Sombre"
+                "dark": "Sombre",
+                "palette": {
+                    "title": "Couleurs",
+                    "hint": "Couleurs de l'application en mode sombre.",
+                    "hintLight": "S'applique au mode sombre (active « Sombre » au-dessus pour les voir).",
+                    "graphite": "Graphite (actuel)",
+                    "ocean": "Océan",
+                    "ember": "Braise",
+                    "amethyst": "Améthyste",
+                    "emerald": "Émeraude",
+                    "gold": "Noir & Or",
+                    "custom": "Personnalisé",
+                    "customTitle": "Couleurs personnalisées",
+                    "customHint": "Touche une couleur pour la régler avec les curseurs ou tape son code (ex. 1a2b3c). Garde un fond et des cartes foncés : l'appli est prévue pour le mode sombre.",
+                    "accent": "Accent (boutons, séries validées)",
+                    "background": "Fond",
+                    "card": "Cartes",
+                    "hue": "Teinte",
+                    "saturation": "Saturation",
+                    "lightness": "Luminosité",
+                    "hex": "Code couleur",
+                    "invalidHex": "Code attendu : 3 ou 6 caractères, par ex. 1a2b3c",
+                    "reset": "Réinitialiser"
+                }
             },
             "sound": {
                 "title": "Son"
@@ -490,7 +547,8 @@
             "add": "Ajouter les réglages machine",
             "placeholder": "Salle A : siège 4, dossier 2\nSalle B : siège 6",
             "hint": "Une ligne par salle, ex. « Salle A : siège 4 ». Touche une salle pour la mettre en avant.",
-            "edit": "Modifier les réglages machine"
+            "edit": "Modifier les réglages machine",
+            "addShort": "Note"
         },
         "previous": "Précédent",
         "restBar": {
@@ -513,7 +571,19 @@
             "complete": "Valider la série",
             "target": "objectif {{range}}"
         },
-        "repRange": "{{range}} reps"
+        "repRange": "{{range}} reps",
+        "exercisePosition": "Exercice {{index}} sur {{total}}",
+        "guide": "Guide",
+        "columns": {
+            "set": "Série",
+            "reps": "Rép.",
+            "time": "Temps",
+            "distance": "Dist."
+        },
+        "next": "Ensuite",
+        "completeSet": "Valider la série {{number}}",
+        "setDone": "Série {{number}} validée",
+        "elapsed": "Durée de la séance {{time}}"
     },
     "routines": {
         "title": "Séances",

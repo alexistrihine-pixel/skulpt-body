@@ -37,9 +37,10 @@ import {
 import { ExerciseSetSelect } from '@/db/schema';
 import { useRunningWorkoutTicker } from '@/hooks/use-running-workout';
 
-import { Header } from './components/header';
+import { Header, ExerciseProgressState } from './components/header';
 import { Actions } from './components/actions';
-import { SetItem } from './components/set-item';
+import { SET_COLUMNS, SetItem, getSetFields } from './components/set-item';
+import { normalizeSetType } from '@/helpers/set-type';
 import { WorkoutExerciseStats } from './components/stats';
 import { Pushes } from '@/components/promo/pushes';
 
@@ -74,6 +75,55 @@ const styles = StyleSheet.create((theme, rt) => ({
     },
     scroll: {
         flex: 1,
+    },
+    setsCard: {
+        marginHorizontal: theme.space(4),
+        marginTop: theme.space(3),
+        borderRadius: theme.space(4),
+        backgroundColor: theme.colors.foreground,
+        overflow: 'hidden',
+    },
+    setsHeader: {
+        height: theme.space(9),
+        paddingHorizontal: theme.space(3),
+        gap: theme.space(2),
+        alignItems: 'center',
+    },
+    setsHeaderText: {
+        fontSize: 12,
+        fontWeight: theme.fontWeight.semibold.fontWeight,
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
+        color: theme.colors.typography,
+        opacity: 0.55,
+    },
+    setsHeaderCell: (width: number) => ({
+        width,
+        alignItems: 'center',
+    }),
+    setsHeaderPrevious: {
+        flex: 1,
+    },
+    nextRow: {
+        marginHorizontal: theme.space(5),
+        marginTop: theme.space(4),
+        alignItems: 'baseline',
+        gap: theme.space(3),
+    },
+    nextLabel: {
+        fontSize: 13,
+        fontWeight: theme.fontWeight.semibold.fontWeight,
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
+        color: theme.colors.typography,
+        opacity: 0.55,
+    },
+    nextName: {
+        flex: 1,
+        fontSize: 15,
+        lineHeight: 20,
+        color: theme.colors.typography,
+        opacity: 0.85,
     },
     pushes: {
         marginVertical: theme.space(5),
@@ -316,6 +366,50 @@ const WorkoutExerciseScreen: FC = () => {
         ],
     );
 
+    // Where this exercise sits in the workout: progress segments, "Exercise 3 of 9", next one.
+    const workoutProgress = useMemo(() => {
+        const list = workoutDetails?.exercises ?? [];
+        const position = list.findIndex((x) => x.workoutExercise.id === workoutExerciseId);
+        const progress: ExerciseProgressState[] = list.map((x, i) =>
+            i === position
+                ? 'current'
+                : x.sets.length > 0 && x.sets.every((set) => !!set.completedAt)
+                  ? 'done'
+                  : 'todo',
+        );
+        const next = position >= 0 ? (list[position + 1] ?? null) : null;
+        return { position: position + 1, progress, next };
+    }, [workoutDetails, workoutExerciseId]);
+
+    // Working sets are numbered 1, 2, 3...; other set types show their letter.
+    const setLabels = useMemo(
+        () =>
+            localItems.reduce<{ labels: string[]; working: number }>(
+                (acc, item) => {
+                    const type = normalizeSetType(item.type);
+                    if (type === 'working') {
+                        const working = acc.working + 1;
+                        return { labels: [...acc.labels, String(working)], working };
+                    }
+                    return {
+                        labels: [...acc.labels, t(`setTypeShort.${type}`, { ns: 'common' })],
+                        working: acc.working,
+                    };
+                },
+                { labels: [], working: 0 },
+            ).labels,
+        [localItems, t],
+    );
+
+    const setFields = useMemo(() => getSetFields(exerciseInfo?.exercise), [exerciseInfo?.exercise]);
+
+    const handleCompleteFromRow = useCallback(
+        (setId: string) => {
+            handleCompleteFromKeypad(setId, { field: 'reps', value: null });
+        },
+        [handleCompleteFromKeypad],
+    );
+
     const getSetLabel = useCallback(
         (setId: string) => {
             const index = localItems.findIndex((it) => it.id === setId);
@@ -342,7 +436,11 @@ const WorkoutExerciseScreen: FC = () => {
                 bottomOffset={theme.space(2)}
                 extraKeyboardSpace={-actionsHeight}
             >
-                <Header exerciseInfo={exerciseInfo} />
+                <Header
+                    exerciseInfo={exerciseInfo}
+                    progress={workoutProgress.progress}
+                    position={workoutProgress.position}
+                />
                 {repRange && (
                     <HStack style={styles.rangePill}>
                         <Target size={theme.space(4)} color={theme.colors.accent} />
@@ -358,7 +456,91 @@ const WorkoutExerciseScreen: FC = () => {
                     </Box>
                 ) : (
                     <>
-                        <Pushes wrapperStyle={styles.pushes} />
+                        <Box style={styles.setsCard}>
+                            <HStack style={styles.setsHeader}>
+                                <Box style={styles.setsHeaderCell(SET_COLUMNS.order)}>
+                                    <Text style={styles.setsHeaderText}>
+                                        {t('training.columns.set', { ns: 'screens' })}
+                                    </Text>
+                                </Box>
+                                <Box style={styles.setsHeaderPrevious}>
+                                    <Text style={styles.setsHeaderText} numberOfLines={1}>
+                                        {t('training.previous', { ns: 'screens' })}
+                                    </Text>
+                                </Box>
+                                {setFields.map((field) => (
+                                    <Box
+                                        key={field}
+                                        style={styles.setsHeaderCell(SET_COLUMNS[field])}
+                                    >
+                                        <Text style={styles.setsHeaderText}>
+                                            {field === 'weight'
+                                                ? exerciseInfo?.exercise?.weightUnits || 'kg'
+                                                : field === 'distance'
+                                                  ? exerciseInfo?.exercise?.distanceUnits ||
+                                                    t('training.columns.distance', {
+                                                        ns: 'screens',
+                                                    })
+                                                  : t(`training.columns.${field}`, {
+                                                        ns: 'screens',
+                                                    })}
+                                        </Text>
+                                    </Box>
+                                ))}
+                                <Box style={styles.setsHeaderCell(SET_COLUMNS.check)} />
+                            </HStack>
+                            <Sortable.Grid
+                                columns={1}
+                                data={localItems}
+                                keyExtractor={(it) => it.id}
+                                onDragStart={handleDragStart}
+                                onDragEnd={({ data }) => handleReorder({ data })}
+                                rowGap={0}
+                                columnGap={0}
+                                overDrag="vertical"
+                                enableActiveItemSnap={false}
+                                itemsLayoutTransitionMode="reorder"
+                                itemEntering={null}
+                                itemExiting={null}
+                                renderItem={({ item, index }) => (
+                                    <SetItem
+                                        key={item.id}
+                                        exerciseInfo={exerciseInfo}
+                                        set={item}
+                                        index={index}
+                                        nowMs={nowMs}
+                                        activeSetId={runningWorkoutActiveSet?.id ?? null}
+                                        restingSetId={runningWorkoutRestingSet?.id ?? null}
+                                        activeWorkTimerRemainingSeconds={
+                                            activeWorkTimerRemainingSeconds ?? null
+                                        }
+                                        activeStopwatchElapsedSeconds={
+                                            activeStopwatchElapsedSeconds ?? null
+                                        }
+                                        previousSet={previousSets?.[index] ?? null}
+                                        label={setLabels[index] ?? String(index + 1)}
+                                        canComplete={canCompleteSet(item.id)}
+                                        onComplete={handleCompleteFromRow}
+                                    />
+                                )}
+                            />
+                        </Box>
+                        {workoutProgress.next && (
+                            <HStack style={styles.nextRow}>
+                                <Text style={styles.nextLabel}>
+                                    {t('training.next', { ns: 'screens' })}
+                                </Text>
+                                <Text style={styles.nextName} numberOfLines={1}>
+                                    {[
+                                        workoutProgress.next.exercise.name,
+                                        t('home.setsCount', {
+                                            ns: 'screens',
+                                            count: workoutProgress.next.sets.length,
+                                        }),
+                                    ].join(' · ')}
+                                </Text>
+                            </HStack>
+                        )}
                         {exerciseInfo && (
                             <WorkoutExerciseStats
                                 sets={exerciseInfo.sets}
@@ -367,38 +549,7 @@ const WorkoutExerciseScreen: FC = () => {
                                 workoutStatus={workoutDetails?.workout.status}
                             />
                         )}
-                        <Sortable.Grid
-                            columns={1}
-                            data={localItems}
-                            keyExtractor={(it) => it.id}
-                            onDragStart={handleDragStart}
-                            onDragEnd={({ data }) => handleReorder({ data })}
-                            rowGap={0}
-                            columnGap={0}
-                            overDrag="vertical"
-                            enableActiveItemSnap={false}
-                            itemsLayoutTransitionMode="reorder"
-                            itemEntering={null}
-                            itemExiting={null}
-                            renderItem={({ item, index }) => (
-                                <SetItem
-                                    key={item.id}
-                                    exerciseInfo={exerciseInfo}
-                                    set={item}
-                                    index={index}
-                                    nowMs={nowMs}
-                                    activeSetId={runningWorkoutActiveSet?.id ?? null}
-                                    restingSetId={runningWorkoutRestingSet?.id ?? null}
-                                    activeWorkTimerRemainingSeconds={
-                                        activeWorkTimerRemainingSeconds ?? null
-                                    }
-                                    activeStopwatchElapsedSeconds={
-                                        activeStopwatchElapsedSeconds ?? null
-                                    }
-                                    previousSet={previousSets?.[index] ?? null}
-                                />
-                            )}
-                        />
+                        <Pushes wrapperStyle={styles.pushes} />
                     </>
                 )}
             </KeyboardAwareScrollView>

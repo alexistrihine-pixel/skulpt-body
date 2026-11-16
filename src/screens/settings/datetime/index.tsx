@@ -140,6 +140,7 @@ const DateTimeScreen = () => {
             <VStack style={styles.fieldContainer}>
                 <Label>{t('datetime.firstWeekday', { ns: 'screens' })}</Label>
                 <Choices
+                    allowDeselect={false}
                     control={control}
                     name="firstWeekday"
                     choices={createTranslatedChoices(firstWeekdayChoices, t)}
@@ -150,6 +151,7 @@ const DateTimeScreen = () => {
             <VStack style={styles.fieldContainer}>
                 <Label>{t('datetime.timeFormat', { ns: 'screens' })}</Label>
                 <Choices
+                    allowDeselect={false}
                     control={control}
                     name="timeFormat"
                     choices={createTranslatedChoices(timeFormatChoices, t)}

@@ -1,5 +1,5 @@
 import { FC, useEffect, useRef } from 'react';
-import { TextStyle, View } from 'react-native';
+import { TextStyle, View, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -22,6 +22,9 @@ interface KeypadFieldProps {
     placeholder?: string | null;
     style: TextStyle;
     accessibilityLabel: string;
+    /** "box": a filled cell (sets table) with an accent outline while edited. */
+    variant?: 'underline' | 'box';
+    boxStyle?: ViewStyle;
 }
 
 const styles = StyleSheet.create((theme) => ({
@@ -45,13 +48,24 @@ const styles = StyleSheet.create((theme) => ({
         borderRadius: theme.radius.full,
         backgroundColor: visible ? theme.colors.accentStrong : 'transparent',
     }),
-    freshHighlight: (visible: boolean) => ({
+    boxOutline: (visible: boolean) => ({
         position: 'absolute',
-        left: -theme.space(1),
-        right: -theme.space(1),
-        top: theme.space(1),
-        bottom: theme.space(1.5),
-        borderRadius: theme.radius.md,
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        borderRadius: theme.space(2.5),
+        borderWidth: 2,
+        borderColor: visible ? theme.colors.accent : 'transparent',
+    }),
+    // In a box cell the highlight fills the cell exactly; under the underline style it hugs the text.
+    freshHighlight: (visible: boolean, boxed: boolean) => ({
+        position: 'absolute',
+        left: boxed ? 0 : -theme.space(1),
+        right: boxed ? 0 : -theme.space(1),
+        top: boxed ? 0 : theme.space(1),
+        bottom: boxed ? 0 : theme.space(1.5),
+        borderRadius: boxed ? theme.space(2.5) : theme.radius.md,
         backgroundColor: visible ? theme.colors.accentMuted : 'transparent',
     }),
 }));
@@ -66,6 +80,8 @@ export const KeypadField: FC<KeypadFieldProps> = ({
     placeholder,
     style,
     accessibilityLabel,
+    variant = 'underline',
+    boxStyle,
 }) => {
     const { focused, draft, fresh, open } = useKeypadStore(
         useShallow((s) => ({
@@ -103,15 +119,26 @@ export const KeypadField: FC<KeypadFieldProps> = ({
             hitSlop={8}
             onPress={() => open({ setId, field }, value)}
         >
-            <View ref={ref} collapsable={false} style={styles.container}>
+            <View
+                ref={ref}
+                collapsable={false}
+                style={variant === 'box' ? [styles.container, boxStyle] : styles.container}
+            >
                 <Box
                     pointerEvents="none"
-                    style={styles.freshHighlight(focused && fresh && draft !== '')}
+                    style={styles.freshHighlight(
+                        focused && fresh && draft !== '',
+                        variant === 'box',
+                    )}
                 />
                 <Text style={[style, styles.text, isPlaceholder ? styles.placeholder : null]}>
                     {shown === '' ? (placeholder ?? ' ') : shown}
                 </Text>
-                <Box pointerEvents="none" style={styles.underline(focused)} />
+                {variant === 'box' ? (
+                    <Box pointerEvents="none" style={styles.boxOutline(focused)} />
+                ) : (
+                    <Box pointerEvents="none" style={styles.underline(focused)} />
+                )}
             </View>
         </Pressable>
     );

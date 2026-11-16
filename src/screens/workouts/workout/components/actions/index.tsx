@@ -20,6 +20,8 @@ interface ActionsProps {
     workout?: WorkoutSelect;
     /** Reports the height of the bottom actions (it grows while the rest timer is shown). */
     onHeightChange?: (height: number) => void;
+    /** While the workout runs, "Finish" lives in the top bar: only the rest timer shows here. */
+    restOnly?: boolean;
 }
 
 const styles = StyleSheet.create((theme, rt) => ({
@@ -54,7 +56,7 @@ const styles = StyleSheet.create((theme, rt) => ({
     },
 }));
 
-export const Actions: FC<ActionsProps> = ({ workout, onHeightChange }) => {
+export const Actions: FC<ActionsProps> = ({ workout, onHeightChange, restOnly }) => {
     const { theme } = useUnistyles();
     const { t } = useTranslation(['common', 'screens']);
     const { track } = useAnalytics();
@@ -123,23 +125,28 @@ export const Actions: FC<ActionsProps> = ({ workout, onHeightChange }) => {
             onLayout={(e) => onHeightChange?.(Math.round(e.nativeEvent.layout.height))}
         >
             <RestBar />
-            <HStack>
-                <Box style={[styles.actionContainer, styles.leftContainer]}>
-                    <CreateButton onPressHandler={handleExerciseAdd} iconSize={theme.space(6)} />
-                </Box>
-                <Box style={[styles.actionContainer, styles.centerContainer]}>
-                    <Box style={styles.startButtonContainer}>
-                        <Button
-                            title={mainButtonTitle}
-                            textStyle={styles.customStartButtonText}
-                            loading={isPendingStartWorkout || isPendingCompleteWorkout}
-                            disabled={!workout}
-                            onPress={handleMainAction}
+            {!restOnly && (
+                <HStack>
+                    <Box style={[styles.actionContainer, styles.leftContainer]}>
+                        <CreateButton
+                            onPressHandler={handleExerciseAdd}
+                            iconSize={theme.space(6)}
                         />
                     </Box>
-                </Box>
-                <Box style={[styles.actionContainer, styles.rightContainer]}></Box>
-            </HStack>
+                    <Box style={[styles.actionContainer, styles.centerContainer]}>
+                        <Box style={styles.startButtonContainer}>
+                            <Button
+                                title={mainButtonTitle}
+                                textStyle={styles.customStartButtonText}
+                                loading={isPendingStartWorkout || isPendingCompleteWorkout}
+                                disabled={!workout}
+                                onPress={handleMainAction}
+                            />
+                        </Box>
+                    </Box>
+                    <Box style={[styles.actionContainer, styles.rightContainer]}></Box>
+                </HStack>
+            )}
         </Box>
     );
 };

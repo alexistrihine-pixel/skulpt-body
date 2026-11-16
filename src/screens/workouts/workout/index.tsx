@@ -1,11 +1,14 @@
-import { FC, useMemo, useCallback, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native-unistyles';
+import { FC, useMemo, useCallback, useEffect, useRef, useState } from 'react';
+import { ScrollView as RNScrollView, useWindowDimensions } from 'react-native';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { useTranslation } from 'react-i18next';
+import { Plus } from 'lucide-react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Sortable from 'react-native-sortables';
 
 import { Box } from '@/components/primitives/box';
-import { ScrollView } from '@/components/primitives/scrollview';
+
 import {
     useWorkoutExercises,
     useWorkoutWithDetails,
@@ -14,6 +17,7 @@ import {
     useWorkoutGroups,
     useUpdateWorkoutGroup,
     useDeleteWorkoutGroup,
+    useUpdateExerciseSet,
 } from '@/hooks/use-workouts';
 
 import { EmptyState, Header, LoadingState, Actions, EditModeActions, Stats } from './components';
@@ -29,17 +33,49 @@ import { useSupersetEditStore } from '@/stores/superset-edit';
 import { useManageCircuitGroups } from './hooks/use-manage-circuit-groups';
 import { buildWorkoutMetricsValues } from './components/stats/builders';
 import { formatRepRange } from '@/helpers/workouts';
+import { Keypad, KEYPAD_HEIGHT } from '@/components/overlays/keypad';
+import {
+    KeypadTarget,
+    keypadFieldMeasurers,
+    keypadTargetKey,
+    useKeypadStore,
+} from '@/stores/keypad';
+import { Pressable } from '@/components/primitives/pressable';
+import { HStack } from '@/components/primitives/hstack';
+import { Text } from '@/components/primitives/text';
+import { ExerciseBlock } from './components/exercise-block';
+import { getSetFields } from '../exercise/components/set-item';
+import { useSetCompletion } from './hooks/use-set-completion';
 
 const styles = StyleSheet.create((theme, rt) => ({
     container: {
         flex: 1,
     },
-    content: (actionsHeight: number) => ({
+    content: (actionsHeight: number, keypadOpen: boolean) => ({
         flexGrow: 1,
         // Leave room for the bottom actions, which grow while the rest timer is shown.
-        paddingBottom: Math.max(rt.insets.bottom + theme.space(20), actionsHeight + theme.space(4)),
+        paddingBottom:
+            Math.max(rt.insets.bottom + theme.space(20), actionsHeight + theme.space(4)) +
+            (keypadOpen ? KEYPAD_HEIGHT : 0),
         backgroundColor: theme.colors.background,
     }),
+    addExercise: {
+        marginHorizontal: theme.space(4),
+        marginTop: theme.space(7),
+        height: theme.space(13),
+        borderRadius: theme.space(4),
+        borderWidth: 2,
+        borderStyle: 'dashed',
+        borderColor: theme.colors.border,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: theme.space(2),
+    },
+    addExerciseText: {
+        fontSize: 17,
+        fontWeight: theme.fontWeight.semibold.fontWeight,
+        color: theme.colors.typography,
+    },
     scroll: {
         flex: 1,
     },
@@ -285,9 +321,51 @@ const WorkoutScreen: FC = () => {
     const updateWorkoutExercise = useUpdateWorkoutExercise();
     const updateWorkoutGroup = useUpdateWorkoutGroup();
     const deleteWorkoutGroup = useDeleteWorkoutGroup();
-    const { runningWorkoutActiveExercise, runningWorkoutActiveSet, runningWorkoutRestingSet } =
-        useRunningWorkoutTicker();
+    const {
+        runningWorkoutActiveExercise,
+        runningWorkoutActiveSet,
+        runningWorkoutRestingSet,
+        nowMs,
+        activeWorkTimerRemainingSeconds,
+        activeStopwatchElapsedSeconds,
+    } = useRunningWorkoutTicker();
     const [actionsHeight, setActionsHeight] = useState(0);
+    const { t } = useTranslation(['screens']);
+    const { theme } = useUnistyles();
+    const { mutateAsync: updateSet } = useUpdateExerciseSet();
+    const { canCompleteSet, completeFromList } = useSetCompletion(workoutDetails);
+    const keypadTarget = useKeypadStore((st) => st.target);
+    const keypadHeight = useKeypadStore((st) => st.height);
+    const keypadOpen = keypadTarget !== null;
+    const scrollRef = useRef<any>(null);
+    const scrollYRef = useRef(0);
+    const { height: windowHeight } = useWindowDimensions();
+
+    // Keep the field being edited visible above the number pad.
+    useEffect(() => {
+        if (!keypadTarget || keypadHeight <= 0) return;
+        const measure = keypadFieldMeasurers.get(keypadTargetKey(keypadTarget));
+        if (!measure) return;
+        let cancelled = false;
+        measure().then((pos) => {
+            if (cancelled || !pos) return;
+            const visibleBottom = windowHeight - keypadHeight - theme.space(4);
+            const fieldBottom = pos.y + pos.height + theme.space(8);
+            const visibleTop = theme.screenHeaderHeight() + theme.space(2);
+            let delta = 0;
+            if (fieldBottom > visibleBottom) delta = fieldBottom - visibleBottom;
+            else if (pos.y < visibleTop) delta = pos.y - visibleTop;
+            if (delta !== 0) {
+                scrollRef.current?.scrollTo({
+                    y: Math.max(0, scrollYRef.current + delta),
+                    animated: true,
+                });
+            }
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [keypadTarget, keypadHeight, windowHeight, theme]);
 
     // Edit mode state
     const isEditMode = useSupersetEditStore((state) => state.workoutId === workoutId);
@@ -350,6 +428,103 @@ const WorkoutScreen: FC = () => {
         items,
     });
     const localItems = localItemsState.key === itemsKey ? localItemsState.items : items;
+
+    const workoutStatus = workoutDetails?.workout.status;
+    // Hevy-style list: every exercise with its sets table, filled in place.
+    const showBlocks = !isEditMode;
+
+    const detailsById = useMemo(
+        () => new Map((workoutDetails?.exercises ?? []).map((e) => [e.workoutExercise.id, e])),
+        [workoutDetails],
+    );
+
+    const sortedSetsById = useMemo(() => {
+        const map = new Map<string, ExerciseSetSelect[]>();
+        for (const e of workoutDetails?.exercises ?? []) {
+            map.set(
+                e.workoutExercise.id,
+                e.sets.slice().sort((a, b) => a.order - b.order),
+            );
+        }
+        return map;
+    }, [workoutDetails]);
+
+    // The exercise being worked on: the set in progress, else the one resting, else the first
+    // exercise with sets left.
+    const activeExerciseId = runningWorkoutActiveExercise?.id ?? null;
+    const currentExerciseId = useMemo(() => {
+        if (workoutStatus !== 'in_progress') return null;
+        if (activeExerciseId) return activeExerciseId;
+        if (runningWorkoutRestingSet) return runningWorkoutRestingSet.workoutExerciseId;
+        const next = localItems.find((it) =>
+            (sortedSetsById.get(it.id) ?? []).some((set) => !set.completedAt),
+        );
+        return next?.id ?? null;
+    }, [workoutStatus, activeExerciseId, runningWorkoutRestingSet, localItems, sortedSetsById]);
+
+    const keypadFields = useMemo<KeypadTarget[]>(
+        () =>
+            localItems.flatMap((it) => {
+                const info = detailsById.get(it.id);
+                const fields = getSetFields(info?.exercise).filter(
+                    (f): f is 'weight' | 'reps' => f === 'weight' || f === 'reps',
+                );
+                return (sortedSetsById.get(it.id) ?? []).flatMap((set) =>
+                    fields.map((field) => ({ setId: set.id, field })),
+                );
+            }),
+        [localItems, detailsById, sortedSetsById],
+    );
+
+    const findSet = useCallback(
+        (setId: string) => {
+            for (const [weId, sets] of sortedSetsById) {
+                const index = sets.findIndex((set) => set.id === setId);
+                if (index >= 0) return { set: sets[index], index, info: detailsById.get(weId) };
+            }
+            return null;
+        },
+        [sortedSetsById, detailsById],
+    );
+
+    const getKeypadValue = useCallback(
+        (target: KeypadTarget) => findSet(target.setId)?.set[target.field] ?? null,
+        [findSet],
+    );
+
+    const handleKeypadChange = useCallback(
+        (target: KeypadTarget, value: number) => {
+            updateSet({ id: target.setId, updates: { [target.field]: value } });
+        },
+        [updateSet],
+    );
+
+    const getSetLabel = useCallback(
+        (setId: string) => {
+            const found = findSet(setId);
+            const name = found?.info?.exercise.name;
+            const label = t('training.keypad.set', {
+                ns: 'screens',
+                number: (found?.index ?? 0) + 1,
+            });
+            return name ? `${name} · ${label}` : label;
+        },
+        [findSet, t],
+    );
+
+    const keypadInfo = keypadTarget ? findSet(keypadTarget.setId)?.info : undefined;
+
+    const handleCompleteSet = useCallback(
+        (setId: string) => {
+            completeFromList(setId);
+        },
+        [completeFromList],
+    );
+
+    const handleAddExercise = useCallback(() => {
+        if (!workoutId) return;
+        router.navigate(`/select?workoutId=${workoutId}`);
+    }, [workoutId]);
 
     const workoutMetrics = useMemo(() => {
         if (!workoutDetails?.workout) {
@@ -562,10 +737,18 @@ const WorkoutScreen: FC = () => {
 
     return (
         <Box style={styles.container}>
-            <ScrollView style={styles.scroll} contentContainerStyle={styles.content(actionsHeight)}>
+            <RNScrollView
+                ref={scrollRef}
+                onScroll={(e) => {
+                    scrollYRef.current = e.nativeEvent.contentOffset.y;
+                }}
+                scrollEventThrottle={16}
+                style={styles.scroll}
+                contentContainerStyle={styles.content(actionsHeight, keypadOpen)}
+            >
                 <Header />
                 {!isLoading && items.length > 0 && <Pushes wrapperStyle={styles.pushes} />}
-                {workoutDetails?.workout && (
+                {workoutDetails?.workout && workoutStatus === 'completed' && (
                     <Stats
                         workout={workoutDetails.workout}
                         exercises={workoutDetails.exercises}
@@ -592,7 +775,34 @@ const WorkoutScreen: FC = () => {
                         itemEntering={null}
                         itemExiting={null}
                         sortEnabled={!isEditMode}
+                        customHandle={showBlocks}
                         renderItem={({ item, index }) => {
+                            const info = detailsById.get(item.id);
+                            if (showBlocks && info && workoutId) {
+                                return (
+                                    <ExerciseBlock
+                                        key={item.id}
+                                        workoutId={workoutId}
+                                        workoutDetails={workoutDetails}
+                                        exercise={info.exercise}
+                                        workoutExercise={info.workoutExercise}
+                                        sets={sortedSetsById.get(item.id) ?? []}
+                                        isCurrent={item.id === currentExerciseId}
+                                        isSuperset={!!item.groupId && item.groupType !== 'single'}
+                                        nowMs={nowMs}
+                                        activeSetId={runningWorkoutActiveSet?.id ?? null}
+                                        restingSetId={runningWorkoutRestingSet?.id ?? null}
+                                        activeWorkTimerRemainingSeconds={
+                                            activeWorkTimerRemainingSeconds ?? null
+                                        }
+                                        activeStopwatchElapsedSeconds={
+                                            activeStopwatchElapsedSeconds ?? null
+                                        }
+                                        canCompleteSet={canCompleteSet}
+                                        onCompleteSet={handleCompleteSet}
+                                    />
+                                );
+                            }
                             const nextItem = localItems[index + 1];
                             const showGroupIndicator =
                                 !!item.groupId &&
@@ -620,7 +830,17 @@ const WorkoutScreen: FC = () => {
                         }}
                     />
                 )}
-            </ScrollView>
+                {showBlocks && !isLoading && workoutStatus === 'in_progress' && (
+                    <Pressable onPress={handleAddExercise}>
+                        <HStack style={styles.addExercise}>
+                            <Plus size={18} strokeWidth={2.5} color={theme.colors.typography} />
+                            <Text style={styles.addExerciseText}>
+                                {t('workout.list.addExercise', { ns: 'screens' })}
+                            </Text>
+                        </HStack>
+                    </Pressable>
+                )}
+            </RNScrollView>
             {isEditMode ? (
                 <EditModeActions
                     selectedIds={selectedIds}
@@ -630,8 +850,27 @@ const WorkoutScreen: FC = () => {
                     onRemoveFromGroup={handleRemoveFromGroup}
                 />
             ) : items.length > 0 ? (
-                <Actions workout={workoutDetails?.workout} onHeightChange={setActionsHeight} />
+                <Actions
+                    workout={workoutDetails?.workout}
+                    onHeightChange={setActionsHeight}
+                    restOnly={workoutStatus === 'in_progress'}
+                />
             ) : null}
+            {showBlocks && (
+                <Keypad
+                    fields={keypadFields}
+                    getValue={getKeypadValue}
+                    onChange={handleKeypadChange}
+                    getSetLabel={getSetLabel}
+                    weightUnits={keypadInfo?.exercise.weightUnits}
+                    canCompleteSet={canCompleteSet}
+                    onCompleteSet={completeFromList}
+                    repRange={formatRepRange(
+                        keypadInfo?.workoutExercise.repMin,
+                        keypadInfo?.workoutExercise.repMax,
+                    )}
+                />
+            )}
         </Box>
     );
 };

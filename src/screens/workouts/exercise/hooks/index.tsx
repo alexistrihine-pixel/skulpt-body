@@ -7,6 +7,8 @@ import { CollapseButton } from '@/components/buttons/collapse';
 import { useScreen } from '@/hooks/use-screen';
 import { useActionsStore } from '@/stores/actions';
 
+import { ElapsedPill } from '../components/elapsed-pill';
+
 const useWorkoutExerciseScreen = () => {
     const { options } = useScreen();
     const { theme } = useUnistyles();
@@ -43,23 +45,30 @@ const useWorkoutExerciseScreen = () => {
             headerMode: 'screen' as const,
             animation: 'slide_from_bottom' as const,
             headerShown: true,
-            headerTitle: () => null,
+            headerTitle: () => <ElapsedPill workoutId={workoutId} />,
+            headerTitleAlign: 'center' as const,
             headerTransparent: true,
             headerStyle: {
                 ...options.headerStyle,
                 backgroundColor: 'transparent',
             },
-            headerLeft: () => <CollapseButton onPressHandler={handleBack} />,
+            headerLeft: () => (
+                <CollapseButton
+                    onPressHandler={handleBack}
+                    backgroundColor={theme.colors.foreground}
+                    iconColor={theme.colors.typography}
+                />
+            ),
             headerRight: () => (
                 <ActionsButton
                     onPressHandler={handleActions}
-                    backgroundColor={theme.colors.accentStrong}
-                    iconColor={theme.colors.neutral[950]}
+                    backgroundColor={theme.colors.foreground}
+                    iconColor={theme.colors.typography}
                 />
             ),
             cardStyle: {
                 ...options.cardStyle,
-                backgroundColor: theme.colors.accent,
+                backgroundColor: theme.colors.background,
             },
         },
     };

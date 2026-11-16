@@ -18,6 +18,8 @@ interface ExerciseNotesProps {
     exercise: ExerciseSelect | null | undefined;
     /** compact: one muted line for lists; full: editable card for the exercise screen. */
     variant?: 'compact' | 'full';
+    /** In the workout list: no outer margins, and a small "Note" chip when empty. */
+    inList?: boolean;
 }
 
 const styles = StyleSheet.create((theme) => ({
@@ -138,6 +140,25 @@ const styles = StyleSheet.create((theme) => ({
         color: theme.colors.neutral[400],
         fontWeight: theme.fontWeight.medium.fontWeight,
     },
+    listCard: {
+        width: '100%',
+        marginTop: 0,
+        marginHorizontal: 0,
+        marginBottom: 0,
+    },
+    addChip: {
+        height: theme.space(9),
+        paddingHorizontal: theme.space(3),
+        borderRadius: theme.radius.full,
+        backgroundColor: theme.colors.foreground,
+        alignItems: 'center',
+        gap: theme.space(1.5),
+    },
+    addChipText: {
+        fontSize: 15,
+        fontWeight: theme.fontWeight.semibold.fontWeight,
+        color: theme.colors.typography,
+    },
     compact: {
         fontSize: theme.fontSize.sm.fontSize,
         color: theme.colors.typography,
@@ -146,7 +167,7 @@ const styles = StyleSheet.create((theme) => ({
     },
 }));
 
-export const ExerciseNotes: FC<ExerciseNotesProps> = ({ exercise, variant = 'full' }) => {
+export const ExerciseNotes: FC<ExerciseNotesProps> = ({ exercise, variant = 'full', inList }) => {
     const { t } = useTranslation(['screens']);
     const { theme } = useUnistyles();
     const activeGym = useGymStore((s) => s.activeGym);
@@ -188,6 +209,19 @@ export const ExerciseNotes: FC<ExerciseNotesProps> = ({ exercise, variant = 'ful
         );
     };
 
+    if (!editing && lines.length === 0 && inList) {
+        return (
+            <Pressable onPress={startEditing} accessibilityRole="button">
+                <HStack style={styles.addChip}>
+                    <Plus size={16} color={theme.colors.typography} />
+                    <Text style={styles.addChipText}>
+                        {t('training.notes.addShort', { ns: 'screens' })}
+                    </Text>
+                </HStack>
+            </Pressable>
+        );
+    }
+
     if (!editing && lines.length === 0) {
         return (
             <Pressable onPress={startEditing} accessibilityRole="button">
@@ -200,7 +234,7 @@ export const ExerciseNotes: FC<ExerciseNotesProps> = ({ exercise, variant = 'ful
     }
 
     return (
-        <VStack style={styles.card}>
+        <VStack style={inList ? [styles.card, styles.listCard] : styles.card}>
             <HStack style={styles.headerRow}>
                 <HStack style={styles.title}>
                     <MapPin size={theme.space(3.5)} color={theme.colors.neutral[400]} />

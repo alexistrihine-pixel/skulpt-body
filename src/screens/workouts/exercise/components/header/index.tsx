@@ -1,128 +1,101 @@
 import { FC, useCallback, useMemo } from 'react';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useTranslation } from 'react-i18next';
+import { router } from 'expo-router';
+import { ChevronRight, ChevronsUp } from 'lucide-react-native';
 
-import { Title } from '@/components/typography/title';
 import { Box } from '@/components/primitives/box';
 import { Text } from '@/components/primitives/text';
 import { ExerciseSelect, WorkoutExerciseSelect } from '@/db/schema';
 import { VStack } from '@/components/primitives/vstack';
 import { HStack } from '@/components/primitives/hstack';
-import { ChevronRight, ChevronsUp } from 'lucide-react-native';
 import { Pressable } from '@/components/primitives/pressable';
-import { router } from 'expo-router';
 import { getPrimaryAnchorMuscleValue } from '@/constants/muscles';
 import { PreviewThumbnail, PreviewMedia } from '@/components/layout/preview';
+
+export type ExerciseProgressState = 'done' | 'current' | 'todo';
 
 interface HeaderProps {
     exerciseInfo: {
         exercise: ExerciseSelect;
         workoutExercise: WorkoutExerciseSelect;
     } | null;
+    /** One entry per exercise of the workout, in order. */
+    progress: ExerciseProgressState[];
+    position: number;
 }
 
-const styles = StyleSheet.create((theme, rt) => ({
+const styles = StyleSheet.create((theme) => ({
     container: {
+        paddingTop: theme.screenHeaderHeight() + theme.space(1),
         paddingHorizontal: theme.space(4),
-        backgroundColor: theme.colors.accent,
-        paddingBottom: theme.space(5),
-        alignItems: 'center',
+        gap: theme.space(4),
     },
-    titleContainer: {
-        paddingHorizontal: theme.space(6),
-        alignItems: 'center',
+    segments: {
+        gap: theme.space(1),
+    },
+    segment: (state: ExerciseProgressState) => ({
+        flex: 1,
+        height: theme.space(1),
+        borderRadius: theme.radius.full,
+        backgroundColor:
+            state === 'current'
+                ? theme.colors.accent
+                : state === 'done'
+                  ? theme.colors.typography
+                  : theme.colors.surfaceRaised,
+        opacity: state === 'done' ? 0.85 : 1,
+    }),
+    titleBlock: {
+        gap: theme.space(1),
+    },
+    eyebrow: {
+        fontSize: 13,
+        lineHeight: 18,
+        fontWeight: theme.fontWeight.semibold.fontWeight,
+        color: theme.colors.typography,
+        opacity: 0.65,
     },
     title: {
+        fontSize: 28,
+        lineHeight: 34,
         fontWeight: theme.fontWeight.bold.fontWeight,
-        color: theme.colors.neutral[950],
-        textAlign: 'center',
+        letterSpacing: -0.3,
+        color: theme.colors.typography,
     },
-    subtitle: {
-        fontSize: theme.fontSize.sm.fontSize,
-        color: theme.colors.neutral[950],
-    },
-    muscleGroupContainer: {
-        position: 'relative',
-        marginTop: theme.headerContentTopOffset(theme.space(11)),
-        marginBottom: theme.space(3.5),
-        justifyContent: 'center',
+    tools: {
         alignItems: 'center',
-        height: theme.space(11),
+        gap: theme.space(2),
     },
-    muscleGroup: {
-        fontWeight: theme.fontWeight.semibold.fontWeight,
-        fontSize: theme.fontSize.default.fontSize,
-        color: theme.colors.neutral[950],
-    },
-    actionsContainer: {
-        marginTop: theme.space(2.5),
-        width: '100%',
-        minHeight: theme.space(12),
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        position: 'relative',
-    },
-    previewThumbnail: {
-        position: 'absolute',
-        left: 0,
-        top: '50%',
-        transform: [{ translateY: -theme.space(6) }],
-        marginRight: 0,
-    },
-    leftActionsContainer: {
-        flex: 1,
-    },
-    centerActionsContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    rightActionsContainer: {
-        flex: 1,
-        alignItems: 'flex-end',
-    },
-    guideButton: {
-        height: theme.space(11),
+    thumbnail: {
+        borderWidth: 0,
         width: theme.space(11),
-        backgroundColor: theme.colors.accentStrong,
+        height: theme.space(11),
+    },
+    chip: {
+        height: theme.space(11),
+        paddingLeft: theme.space(3.5),
+        paddingRight: theme.space(2),
         borderRadius: theme.radius.full,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    previewThumbnailContainer: {
-        borderWidth: theme.space(0),
-        width: theme.space(11),
-        height: theme.space(11),
-    },
-    exerciseLinkWrapper: {
-        flexDirection: 'row',
-        backgroundColor: theme.colors.accentStrong,
-        paddingRight: theme.space(1),
-        paddingLeft: theme.space(2.5),
-        paddingVertical: theme.space(0.25),
-        borderRadius: theme.radius['full'],
+        backgroundColor: theme.colors.foreground,
         alignItems: 'center',
         gap: theme.space(0.5),
     },
-    exerciseLink: {
-        color: theme.colors.neutral[950],
-        fontSize: theme.fontSize.xs.fontSize,
-        fontWeight: theme.fontWeight.default.fontWeight,
+    chipText: {
+        fontSize: 15,
+        fontWeight: theme.fontWeight.semibold.fontWeight,
+        color: theme.colors.typography,
     },
 }));
 
-export const Header: FC<HeaderProps> = ({ exerciseInfo }) => {
-    const { t } = useTranslation(['common']);
+export const Header: FC<HeaderProps> = ({ exerciseInfo, progress, position }) => {
+    const { t } = useTranslation(['common', 'screens']);
     const { theme } = useUnistyles();
 
     const muscleGroup = useMemo(() => {
         const mg = getPrimaryAnchorMuscleValue(exerciseInfo?.exercise?.primaryMuscleGroups);
         return mg ? t(`muscleGroup.${mg}`, { ns: 'common' }) : '';
     }, [exerciseInfo?.exercise?.primaryMuscleGroups, t]);
-
-    const handleExerciseLinkPress = () => {
-        router.navigate(`/exercises/${exerciseInfo?.exercise.id}`);
-    };
 
     const hasGuide = useMemo(() => {
         const exercise = exerciseInfo?.exercise;
@@ -136,66 +109,76 @@ export const Header: FC<HeaderProps> = ({ exerciseInfo }) => {
 
     const exerciseId = exerciseInfo?.exercise.id;
 
+    const handleExerciseLinkPress = useCallback(() => {
+        if (!exerciseId) return;
+        router.navigate(`/exercises/${exerciseId}`);
+    }, [exerciseId]);
+
     const handleGuideOpen = useCallback(() => {
         if (!exerciseId) return;
-        router.navigate({
-            pathname: '/guide',
-            params: { exerciseId },
-        });
+        router.navigate({ pathname: '/guide', params: { exerciseId } });
     }, [exerciseId]);
 
     const handlePreviewOpen = useCallback((name: string, media: PreviewMedia) => {
-        router.navigate({
-            pathname: '/preview',
-            params: { name, ...media },
-        });
+        router.navigate({ pathname: '/preview', params: { name, ...media } });
     }, []);
+
+    const eyebrow = [
+        position > 0 && progress.length > 0
+            ? t('training.exercisePosition', {
+                  ns: 'screens',
+                  index: position,
+                  total: progress.length,
+              })
+            : null,
+        muscleGroup || null,
+    ]
+        .filter(Boolean)
+        .join(' · ');
 
     return (
         <VStack style={styles.container}>
-            <Box style={styles.muscleGroupContainer}>
-                <Text style={styles.muscleGroup}>{muscleGroup}</Text>
-            </Box>
-            <Box style={styles.titleContainer}>
-                <Title type="h5" style={styles.title}>
-                    {exerciseInfo?.exercise.name || 'Exercise'}
-                </Title>
-                <Text style={styles.subtitle}>
-                    {exerciseInfo?.exercise.tracking
-                        .map((v) => t(`exerciseTracking.${v}`, { ns: 'common' }))
-                        .join(' + ')}
-                </Text>
-            </Box>
-            <HStack style={styles.actionsContainer}>
-                <Box style={styles.leftActionsContainer}>
-                    <PreviewThumbnail
-                        name={exerciseInfo?.exercise.name ?? ''}
-                        gifFilename={exerciseInfo?.exercise.gifFilename}
-                        imageUri={exerciseInfo?.exercise.imageUri}
-                        onOpen={handlePreviewOpen}
-                        analyticsSurface="active_workout"
-                        analyticsWorkoutId={exerciseInfo?.workoutExercise.workoutId}
-                        containerStyle={styles.previewThumbnailContainer}
-                    />
-                </Box>
-                <Box style={styles.centerActionsContainer}>
-                    <Pressable style={styles.exerciseLinkWrapper} onPress={handleExerciseLinkPress}>
-                        <Text style={styles.exerciseLink}>{t('exercise', { ns: 'common' })}</Text>
-                        <ChevronRight size={theme.space(4)} color={theme.colors.neutral[950]} />
+            {progress.length > 1 && (
+                <HStack
+                    style={styles.segments}
+                    accessibilityLabel={eyebrow}
+                    accessibilityRole="progressbar"
+                >
+                    {progress.map((state, i) => (
+                        <Box key={i} style={styles.segment(state)} />
+                    ))}
+                </HStack>
+            )}
+            <VStack style={styles.titleBlock}>
+                {eyebrow.length > 0 && <Text style={styles.eyebrow}>{eyebrow}</Text>}
+                <Text style={styles.title}>{exerciseInfo?.exercise.name || ''}</Text>
+            </VStack>
+            <HStack style={styles.tools}>
+                <PreviewThumbnail
+                    name={exerciseInfo?.exercise.name ?? ''}
+                    gifFilename={exerciseInfo?.exercise.gifFilename}
+                    imageUri={exerciseInfo?.exercise.imageUri}
+                    onOpen={handlePreviewOpen}
+                    analyticsSurface="active_workout"
+                    analyticsWorkoutId={exerciseInfo?.workoutExercise.workoutId}
+                    containerStyle={styles.thumbnail}
+                />
+                <Pressable onPress={handleExerciseLinkPress}>
+                    <HStack style={styles.chip}>
+                        <Text style={styles.chipText}>{t('exercise', { ns: 'common' })}</Text>
+                        <ChevronRight size={theme.space(4.5)} color={theme.colors.typography} />
+                    </HStack>
+                </Pressable>
+                {hasGuide && (
+                    <Pressable onPress={handleGuideOpen}>
+                        <HStack style={styles.chip}>
+                            <Text style={styles.chipText}>
+                                {t('training.guide', { ns: 'screens' })}
+                            </Text>
+                            <ChevronsUp size={theme.space(4.5)} color={theme.colors.typography} />
+                        </HStack>
                     </Pressable>
-                </Box>
-                <Box style={styles.rightActionsContainer}>
-                    {hasGuide && (
-                        <Pressable onPress={handleGuideOpen}>
-                            <Box style={styles.guideButton}>
-                                <ChevronsUp
-                                    size={theme.space(6)}
-                                    color={theme.colors.neutral[950]}
-                                />
-                            </Box>
-                        </Pressable>
-                    )}
-                </Box>
+                )}
             </HStack>
         </VStack>
     );

@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { EditUserFormData, editUserSchema, themes, useUser } from '@/hooks/use-user';
 import { reportError } from '@/services/error-reporting';
 import { markFormValuesSyncing, submitAutoSaveForm } from '../shared';
+import { PalettePicker } from './palette-picker';
 
 const styles = StyleSheet.create((theme, rt) => ({
     container: {
@@ -86,6 +87,7 @@ const ThemeScreen = () => {
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             <Choices
+                allowDeselect={false}
                 control={control}
                 name="theme"
                 choices={themes.map((v) => ({
@@ -95,6 +97,7 @@ const ThemeScreen = () => {
                 error={errors.theme}
                 selectPosition="right"
             />
+            <PalettePicker />
         </ScrollView>
     );
 };

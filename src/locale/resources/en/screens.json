@@ -15,7 +15,12 @@
         "exercisesCount_one": "{{count}} exercise",
         "exercisesCount_other": "{{count}} exercises",
         "setsCount_one": "{{count}} set",
-        "setsCount_other": "{{count}} sets"
+        "setsCount_other": "{{count}} sets",
+        "next": {
+            "title": "Next workout",
+            "lastDone": "Last time {{date}}",
+            "neverDone": "Never done"
+        }
     },
     "results": {
         "title": "Results",
@@ -135,7 +140,8 @@
         "tabs": {
             "history": "History",
             "guide": "Guide",
-            "statistics": "Stats"
+            "statistics": "Stats",
+            "progress": "Progress"
         },
         "history": {
             "empty": {
@@ -215,6 +221,22 @@
                     }
                 }
             }
+        },
+        "progress": {
+            "periods": {
+                "1m": "1 M",
+                "3m": "3 M",
+                "1y": "1 yr",
+                "all": "All"
+            },
+            "oneRm": "Estimated 1RM",
+            "change": "{{value}} since {{date}}",
+            "single": "One workout in this period",
+            "empty": "No sets with a weight in this period",
+            "records": "Records",
+            "bestSet": "Best set",
+            "bestVolume": "Best session volume",
+            "recent": "Recent workouts"
         }
     },
     "exercise-create": {
@@ -316,6 +338,18 @@
             "distance": "Distance",
             "pace": "Pace",
             "cadence": "Cadence"
+        },
+        "list": {
+            "current": "In progress · {{done}} of {{total}} sets",
+            "superset": "Superset",
+            "exerciseMenu": "Exercise options",
+            "rest": "Rest {{time}}",
+            "noRest": "No rest",
+            "addSet": "Add a set",
+            "addExercise": "Add an exercise",
+            "duration": "Duration",
+            "volume": "Volume",
+            "sets": "Sets"
         }
     },
     "workoutExercise": {
@@ -354,7 +388,30 @@
                 "title": "Theme",
                 "auto": "System",
                 "light": "Light",
-                "dark": "Dark"
+                "dark": "Dark",
+                "palette": {
+                    "title": "Colors",
+                    "hint": "App colors in dark mode.",
+                    "hintLight": "Applies to dark mode (pick “Dark” above to see them).",
+                    "graphite": "Graphite (default)",
+                    "ocean": "Ocean",
+                    "ember": "Ember",
+                    "amethyst": "Amethyst",
+                    "emerald": "Emerald",
+                    "gold": "Black & Gold",
+                    "custom": "Custom",
+                    "customTitle": "Custom colors",
+                    "customHint": "Tap a color to tune it with the sliders or type its code (e.g. 1a2b3c). Keep a dark background and cards: the app is designed for dark mode.",
+                    "accent": "Accent (buttons, completed sets)",
+                    "background": "Background",
+                    "card": "Cards",
+                    "hue": "Hue",
+                    "saturation": "Saturation",
+                    "lightness": "Lightness",
+                    "hex": "Color code",
+                    "invalidHex": "Expected 3 or 6 characters, e.g. 1a2b3c",
+                    "reset": "Reset"
+                }
             },
             "sound": {
                 "title": "Sound"
@@ -490,7 +547,8 @@
             "add": "Add machine settings",
             "placeholder": "Gym A: seat 4, back 2\nGym B: seat 6",
             "hint": "One line per gym, e.g. \"Gym A: seat 4\". Tap a gym to highlight it.",
-            "edit": "Edit machine settings"
+            "edit": "Edit machine settings",
+            "addShort": "Note"
         },
         "previous": "Previous",
         "restBar": {
@@ -513,7 +571,19 @@
             "complete": "Complete set",
             "target": "target {{range}}"
         },
-        "repRange": "{{range}} reps"
+        "repRange": "{{range}} reps",
+        "exercisePosition": "Exercise {{index}} of {{total}}",
+        "guide": "Guide",
+        "columns": {
+            "set": "Set",
+            "reps": "Reps",
+            "time": "Time",
+            "distance": "Dist."
+        },
+        "next": "Up next",
+        "completeSet": "Complete set {{number}}",
+        "setDone": "Set {{number}} done",
+        "elapsed": "Workout time {{time}}"
     },
     "routines": {
         "title": "Workouts",

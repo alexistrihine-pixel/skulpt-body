@@ -105,6 +105,7 @@ const LanguageScreen = () => {
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
             <Choices
+                allowDeselect={false}
                 control={control}
                 name="lng"
                 choices={supportedLanguages.map((v) => ({

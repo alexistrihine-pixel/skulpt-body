@@ -1,6 +1,8 @@
 import { storage } from '@/storage';
 import { Platform } from 'react-native';
 import { StyleSheet, UnistylesRuntime } from 'react-native-unistyles';
+import { isPaletteId, palettes, type Palette, type PaletteId } from '@/theme/palettes';
+import { buildCustomPalette, sanitizeCustomColors, type CustomColors } from '@/theme/custom';
 
 const FONT_SIZE_BASE = 16;
 const SPACE = 4;
@@ -223,28 +225,81 @@ const lightTheme = {
         accentStrong: colors.lime[500],
         accentMuted: 'rgba(163, 230, 53, 0.16)',
         onAccent: colors.neutral[950],
+        accentSubtle: 'rgba(163, 230, 53, 0.12)',
+        rowActive: colors.neutral[100],
+        fieldBackground: colors.neutral[200],
         ...colors,
     },
     ...common,
     ...func,
 } as const;
 
-const darkTheme = {
-    colors: {
-        background: colors.neutral[950],
-        foreground: colors.neutral[900],
-        typography: colors.white,
-        border: colors.neutral[700],
-        surfaceRaised: colors.neutral[800],
-        accent: colors.lime[400],
-        accentStrong: colors.lime[500],
-        accentMuted: 'rgba(163, 230, 53, 0.16)',
-        onAccent: colors.neutral[950],
-        ...colors,
-    },
-    ...common,
-    ...func,
-} as const;
+// Dark palette: "Graphite" (design validated 2026-11-16) by default, others selectable in
+// Settings > Theme. Each palette swaps the greys and the accent; the theme name stays 'dark'.
+const buildDarkTheme = (palette: Palette) => {
+    const neutral = { ...colors.neutral, ...palette.neutral };
+
+    return {
+        colors: {
+            ...colors,
+            neutral,
+            lime: palette.lime,
+            background: neutral[950],
+            foreground: neutral[900],
+            typography: palette.typography,
+            border: palette.border,
+            surfaceRaised: neutral[800],
+            accent: palette.accent,
+            accentStrong: palette.accentStrong,
+            accentMuted: palette.accentMuted,
+            onAccent: palette.onAccent ?? neutral[950],
+            accentSubtle: palette.accentSubtle,
+            rowActive: palette.rowActive,
+            fieldBackground: palette.fieldBackground,
+        } as typeof lightTheme.colors,
+        ...common,
+        ...func,
+    };
+};
+
+export type PaletteChoice = PaletteId | 'custom';
+
+const PALETTE_STORAGE_KEY = 'user.palette';
+const CUSTOM_STORAGE_KEY = 'user.palette.custom';
+
+const getStoredPalette = (): PaletteChoice => {
+    const stored = storage.getString(PALETTE_STORAGE_KEY);
+    if (stored === 'custom') return 'custom';
+    return isPaletteId(stored) ? stored : 'graphite';
+};
+
+const getStoredCustomColors = (): CustomColors => {
+    try {
+        const raw = storage.getString(CUSTOM_STORAGE_KEY);
+        return sanitizeCustomColors(raw ? JSON.parse(raw) : undefined);
+    } catch {
+        return sanitizeCustomColors(undefined);
+    }
+};
+
+const resolvePalette = (choice: PaletteChoice) =>
+    choice === 'custom' ? buildCustomPalette(getStoredCustomColors()) : palettes[choice];
+
+const darkTheme = buildDarkTheme(resolvePalette(getStoredPalette()));
+
+/** Switch the dark palette at runtime and remember it. */
+export const applyPalette = (choice: PaletteChoice) => {
+    storage.set(PALETTE_STORAGE_KEY, choice);
+    UnistylesRuntime.updateTheme('dark', () => buildDarkTheme(resolvePalette(choice)));
+};
+
+/** Save the custom colours; repaints the app when the custom palette is active. */
+export const saveCustomColors = (value: CustomColors) => {
+    storage.set(CUSTOM_STORAGE_KEY, JSON.stringify(sanitizeCustomColors(value)));
+    if (getStoredPalette() === 'custom') applyPalette('custom');
+};
+
+export { getStoredPalette, getStoredCustomColors };
 
 const appThemes = {
     light: lightTheme,

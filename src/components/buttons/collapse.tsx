@@ -7,32 +7,38 @@ import { Box } from '../primitives/box';
 
 interface CollapseButtonProps {
     onPressHandler: () => void;
+    backgroundColor?: string;
+    iconColor?: string;
 }
 
 const styles = StyleSheet.create((theme) => ({
-    container: {
+    container: (backgroundColor?: string) => ({
         height: theme.space(11),
         width: theme.space(11),
-        backgroundColor: theme.colors.accentStrong,
+        backgroundColor: backgroundColor || theme.colors.accentStrong,
         borderRadius: theme.radius.full,
         justifyContent: 'center',
         alignItems: 'center',
-    },
+    }),
     icon: {
         marginTop: theme.space(0.5),
     },
 }));
 
-const CollapseButton: FC<CollapseButtonProps> = ({ onPressHandler }) => {
+const CollapseButton: FC<CollapseButtonProps> = ({
+    onPressHandler,
+    backgroundColor,
+    iconColor,
+}) => {
     const { theme } = useUnistyles();
 
     return (
         <Pressable onPress={onPressHandler}>
-            <Box style={styles.container}>
+            <Box style={styles.container(backgroundColor)}>
                 <ChevronDown
                     style={styles.icon}
                     size={theme.space(7)}
-                    color={theme.colors.neutral[950]}
+                    color={iconColor || theme.colors.neutral[950]}
                 />
             </Box>
         </Pressable>

@@ -237,6 +237,7 @@ const UnitsScreen = () => {
             <VStack style={styles.fieldContainer}>
                 <Label>{t('units.bodyWeightUnits', { ns: 'screens' })}</Label>
                 <Choices
+                    allowDeselect={false}
                     control={control}
                     name="bodyWeightUnits"
                     choices={createTranslatedChoices(weightUnits, t)}
@@ -247,6 +248,7 @@ const UnitsScreen = () => {
             <VStack style={styles.fieldContainer}>
                 <Label>{t('units.measurementUnits', { ns: 'screens' })}</Label>
                 <Choices
+                    allowDeselect={false}
                     control={control}
                     name="measurementUnits"
                     choices={createTranslatedChoices(measurementUnits, t)}
@@ -257,6 +259,7 @@ const UnitsScreen = () => {
             <VStack style={styles.fieldContainer}>
                 <Label>{t('units.weightUnits', { ns: 'screens' })}</Label>
                 <Choices
+                    allowDeselect={false}
                     control={control}
                     name="weightUnits"
                     choices={createTranslatedChoices(weightUnits, t)}
@@ -267,6 +270,7 @@ const UnitsScreen = () => {
             <VStack style={styles.fieldContainer}>
                 <Label>{t('units.distanceUnits', { ns: 'screens' })}</Label>
                 <Choices
+                    allowDeselect={false}
                     control={control}
                     name="distanceUnits"
                     choices={createTranslatedChoices(distanceUnits, t)}

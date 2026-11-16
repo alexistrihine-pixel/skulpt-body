@@ -804,9 +804,7 @@ const useRunningWorkoutProvider = () => {
                     const title = t('timeOption.timer', { ns: 'common' });
                     const body = exerciseByWorkoutExerciseId.get(event.workoutExerciseId)?.exercise
                         .name;
-                    const deepLinkUrl = Linking.createURL(
-                        `/workout/${workoutId}/${event.workoutExerciseId}`,
-                    );
+                    const deepLinkUrl = Linking.createURL(`/workout/${workoutId}`);
                     await scheduleWorkTimerNotificationAt(
                         fireDate,
                         { title, body: body ?? undefined },
@@ -847,9 +845,7 @@ const useRunningWorkoutProvider = () => {
                 }
 
                 const deepLinkUrl =
-                    nextExerciseId != null
-                        ? Linking.createURL(`/workout/${workoutId}/${nextExerciseId}`)
-                        : undefined;
+                    nextExerciseId != null ? Linking.createURL(`/workout/${workoutId}`) : undefined;
 
                 await scheduleRestTimerNotificationAt(
                     fireDate,

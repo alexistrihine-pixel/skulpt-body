@@ -57,6 +57,8 @@ export interface ChoicesFieldType<
     selectPosition?: 'left' | 'right';
     containerStyle?: BoxProps['style'];
     uncheckedIndicatorBackgroundColor?: string;
+    /** Radio only: tapping the selected option clears it (default). Off for required settings. */
+    allowDeselect?: boolean;
     onChange?: (value: ValueType) => void;
 }
 
@@ -557,6 +559,7 @@ function Choices<T extends FieldValues, TName extends FieldPath<T>>({
     selectPosition = 'left',
     containerStyle,
     uncheckedIndicatorBackgroundColor,
+    allowDeselect = true,
     onChange: customOnChange,
 }: ChoicesFieldType<T, TName>) {
     const { theme } = useUnistyles();
@@ -622,13 +625,13 @@ function Choices<T extends FieldValues, TName extends FieldPath<T>>({
                     Array.isArray(value) &&
                     JSON.stringify(value) === JSON.stringify(choice.value)
                 ) {
-                    handleChange(null);
+                    if (allowDeselect) handleChange(null);
                 } else {
                     handleChange(choice.value);
                 }
             } else {
                 if (value === choice.value) {
-                    handleChange(null);
+                    if (allowDeselect) handleChange(null);
                 } else {
                     handleChange(choice.value);
                 }

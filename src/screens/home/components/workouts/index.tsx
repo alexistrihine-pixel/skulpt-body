@@ -17,6 +17,7 @@ import { Pushes } from '@/components/promo/pushes';
 import { WorkoutCard } from '../workout-card';
 import { Header } from '../header';
 import { WeekStats } from '../week';
+import { NextWorkout } from '../next-workout';
 
 type WorkoutSectionType = 'in_progress' | 'planned' | 'completed';
 
@@ -221,10 +222,11 @@ export const Workouts: FC<WorkoutsProps> = ({
             <VStack style={styles.headerContent}>
                 <Header />
                 <WeekStats workouts={workouts} firstWeekday={firstWeekday} />
+                {inProgressWorkouts.length === 0 && <NextWorkout workouts={workouts} />}
                 <Pushes />
             </VStack>
         ),
-        [firstWeekday, workouts],
+        [firstWeekday, workouts, inProgressWorkouts.length],
     );
 
     const renderItem = useCallback(
