@@ -1006,6 +1006,8 @@ export const duplicateWorkout = async (
                 exerciseId: originalWorkoutExercise.exerciseId,
                 groupId: newGroupId,
                 orderInGroup: originalWorkoutExercise.orderInGroup,
+                repMin: originalWorkoutExercise.repMin,
+                repMax: originalWorkoutExercise.repMax,
                 createdAt,
                 updatedAt: createdAt,
             });

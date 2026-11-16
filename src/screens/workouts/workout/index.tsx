@@ -28,16 +28,18 @@ import { WorkoutExerciseSelect } from '@/db/schema/workout';
 import { useSupersetEditStore } from '@/stores/superset-edit';
 import { useManageCircuitGroups } from './hooks/use-manage-circuit-groups';
 import { buildWorkoutMetricsValues } from './components/stats/builders';
+import { formatRepRange } from '@/helpers/workouts';
 
 const styles = StyleSheet.create((theme, rt) => ({
     container: {
         flex: 1,
     },
-    content: {
+    content: (actionsHeight: number) => ({
         flexGrow: 1,
-        paddingBottom: rt.insets.bottom + theme.space(20),
+        // Leave room for the bottom actions, which grow while the rest timer is shown.
+        paddingBottom: Math.max(rt.insets.bottom + theme.space(20), actionsHeight + theme.space(4)),
         backgroundColor: theme.colors.background,
-    },
+    }),
     scroll: {
         flex: 1,
     },
@@ -82,6 +84,7 @@ const getWorkoutItemSnapshotKey = (item: WorkoutItem) =>
         item.groupId ?? '',
         item.groupType ?? '',
         item.tracking?.join(',') ?? '',
+        item.repRange ?? '',
         item.sets?.map(getSetSnapshotKey).join(',') ?? '',
     ].join(':');
 
@@ -284,6 +287,7 @@ const WorkoutScreen: FC = () => {
     const deleteWorkoutGroup = useDeleteWorkoutGroup();
     const { runningWorkoutActiveExercise, runningWorkoutActiveSet, runningWorkoutRestingSet } =
         useRunningWorkoutTicker();
+    const [actionsHeight, setActionsHeight] = useState(0);
 
     // Edit mode state
     const isEditMode = useSupersetEditStore((state) => state.workoutId === workoutId);
@@ -334,6 +338,7 @@ const WorkoutScreen: FC = () => {
                         .slice()
                         .sort((a, b) => a.order - b.order),
                     exercise: ex,
+                    repRange: formatRepRange(we.repMin, we.repMax),
                 };
             })
             .sort((a, b) => a.order - b.order);
@@ -557,7 +562,7 @@ const WorkoutScreen: FC = () => {
 
     return (
         <Box style={styles.container}>
-            <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+            <ScrollView style={styles.scroll} contentContainerStyle={styles.content(actionsHeight)}>
                 <Header />
                 {!isLoading && items.length > 0 && <Pushes wrapperStyle={styles.pushes} />}
                 {workoutDetails?.workout && (
@@ -625,7 +630,7 @@ const WorkoutScreen: FC = () => {
                     onRemoveFromGroup={handleRemoveFromGroup}
                 />
             ) : items.length > 0 ? (
-                <Actions workout={workoutDetails?.workout} />
+                <Actions workout={workoutDetails?.workout} onHeightChange={setActionsHeight} />
             ) : null}
         </Box>
     );

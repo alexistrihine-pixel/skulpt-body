@@ -68,6 +68,9 @@ export const workoutExercise = sqliteTable(
         exerciseId: text('exercise_id', { length: 21 }).notNull(),
         groupId: text('group_id', { length: 21 }),
         orderInGroup: integer('order_in_group'),
+        /** Target rep range copied from the routine ("8-10"). Both null = no range. */
+        repMin: integer('rep_min'),
+        repMax: integer('rep_max'),
         createdAt: integer('created_at', { mode: 'timestamp_ms' })
             .notNull()
             .default(sql`(strftime('%s','now') * 1000)`),

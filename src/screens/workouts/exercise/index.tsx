@@ -1,7 +1,8 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Target } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Sortable from 'react-native-sortables';
 import {
@@ -13,10 +14,17 @@ import {
 import { Box } from '@/components/primitives/box';
 import Spinner from '@/components/feedback/spinner';
 import {
+    useCompleteExerciseSet,
     usePreviousExerciseSets,
     useUpdateExerciseSet,
     useWorkoutWithDetails,
 } from '@/hooks/use-workouts';
+import { HStack } from '@/components/primitives/hstack';
+import { Text } from '@/components/primitives/text';
+import { getExerciseSetById } from '@/crud/exercise';
+import { formatRepRange, repRangeFallback } from '@/helpers/workouts';
+import { finalizeRestNow, startNextSetOrExercise } from '@/services/set-transitions';
+import { resolveRestTime } from '@/stores/rest-settings';
 import { useTranslation } from 'react-i18next';
 import { ExerciseNotes } from '@/components/layout/exercise-notes';
 import { Keypad, KEYPAD_HEIGHT } from '@/components/overlays/keypad';
@@ -39,11 +47,31 @@ const styles = StyleSheet.create((theme, rt) => ({
     container: {
         flex: 1,
     },
-    content: (keypadOpen: boolean) => ({
+    content: (keypadOpen: boolean, actionsHeight: number) => ({
         flexGrow: 1,
-        paddingBottom: rt.insets.bottom + theme.space(20) + (keypadOpen ? KEYPAD_HEIGHT : 0),
+        // Leave room for the bottom actions, which grow while the rest timer is shown.
+        paddingBottom:
+            Math.max(rt.insets.bottom + theme.space(20), actionsHeight + theme.space(4)) +
+            (keypadOpen ? KEYPAD_HEIGHT : 0),
         backgroundColor: theme.colors.background,
     }),
+    rangePill: {
+        alignSelf: 'flex-start',
+        marginHorizontal: theme.space(4),
+        marginTop: theme.space(3),
+        marginBottom: theme.space(1),
+        height: theme.space(8),
+        paddingHorizontal: theme.space(3),
+        borderRadius: theme.radius.full,
+        backgroundColor: theme.colors.accentMuted,
+        alignItems: 'center',
+        gap: theme.space(1.5),
+    },
+    rangePillText: {
+        fontSize: theme.fontSize.sm.fontSize,
+        fontWeight: theme.fontWeight.bold.fontWeight,
+        color: theme.colors.accent,
+    },
     scroll: {
         flex: 1,
     },
@@ -85,6 +113,7 @@ const WorkoutExerciseScreen: FC = () => {
     const { data: workoutDetails, isLoading } = useWorkoutWithDetails(workoutId || '');
 
     const { mutateAsync: updateSet } = useUpdateExerciseSet();
+    const { mutateAsync: completeSet } = useCompleteExerciseSet();
     const { t } = useTranslation(['screens']);
     const keypadTarget = useKeypadStore((s) => s.target);
     const keypadHeight = useKeypadStore((s) => s.height);
@@ -200,6 +229,93 @@ const WorkoutExerciseScreen: FC = () => {
         [updateSet],
     );
 
+    const repRange = formatRepRange(
+        exerciseInfo?.workoutExercise.repMin,
+        exerciseInfo?.workoutExercise.repMax,
+    );
+
+    // The keypad's → key completes a set when nothing else is in the way: the set is the one in
+    // progress, or no set is in progress (e.g. the rest of the previous set is still running).
+    const canCompleteSet = useCallback(
+        (setId: string) => {
+            if (workoutDetails?.workout.status !== 'in_progress') return false;
+            const item = localItems.find((it) => it.id === setId);
+            if (!item || item.completedAt) return false;
+            const active = runningWorkoutActiveSet;
+            return !active || active.id === setId;
+        },
+        [workoutDetails?.workout.status, localItems, runningWorkoutActiveSet],
+    );
+
+    const handleCompleteFromKeypad = useCallback(
+        async (setId: string, typed: { field: KeypadTarget['field']; value: number | null }) => {
+            if (!workoutDetails || !exerciseInfo) return;
+            const set = await getExerciseSetById(setId);
+            if (!set || set.completedAt) return;
+
+            // Values left empty take what was shown in grey: last time's value, or the top of the
+            // rep range.
+            const previous = previousSets?.[localItems.findIndex((it) => it.id === setId)];
+            const tracking = Array.isArray(exerciseInfo.exercise.tracking)
+                ? exerciseInfo.exercise.tracking
+                : [];
+            const weight =
+                typed.field === 'weight' && typed.value != null ? typed.value : set.weight;
+            const reps = typed.field === 'reps' && typed.value != null ? typed.value : set.reps;
+            const updates: Partial<ExerciseSetSelect> = {};
+            if (tracking.includes('weight')) {
+                updates.weight = weight ?? previous?.weight ?? null;
+            }
+            if (tracking.includes('reps')) {
+                updates.reps =
+                    reps ??
+                    repRangeFallback(
+                        exerciseInfo.workoutExercise.repMin,
+                        exerciseInfo.workoutExercise.repMax,
+                    ) ??
+                    previous?.reps ??
+                    null;
+            }
+
+            // Completing the next set during a rest ends that rest now.
+            if (runningWorkoutRestingSet && runningWorkoutRestingSet.id !== setId) {
+                await finalizeRestNow(runningWorkoutRestingSet, updateSet);
+            }
+            if (!set.startedAt) updates.startedAt = new Date();
+
+            await completeSet({
+                id: setId,
+                workoutId: workoutDetails.workout.id,
+                workoutExerciseId: exerciseInfo.workoutExercise.id,
+                setType: set.type,
+                source: 'phone',
+                updates,
+            });
+
+            // No rest after this set: go straight to the next one.
+            const restTime = resolveRestTime(set.restTime);
+            if (!restTime || restTime <= 0) {
+                await startNextSetOrExercise(
+                    set,
+                    workoutDetails,
+                    updateSet,
+                    (id) => router.setParams({ workoutExerciseId: id }),
+                    workoutExerciseId,
+                );
+            }
+        },
+        [
+            workoutDetails,
+            exerciseInfo,
+            previousSets,
+            localItems,
+            runningWorkoutRestingSet,
+            updateSet,
+            completeSet,
+            workoutExerciseId,
+        ],
+    );
+
     const getSetLabel = useCallback(
         (setId: string) => {
             const index = localItems.findIndex((it) => it.id === setId);
@@ -221,12 +337,20 @@ const WorkoutExerciseScreen: FC = () => {
                 }}
                 scrollEventThrottle={16}
                 style={styles.scroll}
-                contentContainerStyle={styles.content(keypadOpen)}
+                contentContainerStyle={styles.content(keypadOpen, actionsHeight)}
                 keyboardDismissMode="interactive"
                 bottomOffset={theme.space(2)}
                 extraKeyboardSpace={-actionsHeight}
             >
                 <Header exerciseInfo={exerciseInfo} />
+                {repRange && (
+                    <HStack style={styles.rangePill}>
+                        <Target size={theme.space(4)} color={theme.colors.accent} />
+                        <Text style={styles.rangePillText}>
+                            {t('training.repRange', { ns: 'screens', range: repRange })}
+                        </Text>
+                    </HStack>
+                )}
                 {exerciseInfo && <ExerciseNotes exercise={exerciseInfo.exercise} />}
                 {isLoading ? (
                     <Box>
@@ -290,6 +414,9 @@ const WorkoutExerciseScreen: FC = () => {
                 onChange={handleKeypadChange}
                 getSetLabel={getSetLabel}
                 weightUnits={exerciseInfo?.exercise?.weightUnits}
+                canCompleteSet={canCompleteSet}
+                onCompleteSet={handleCompleteFromKeypad}
+                repRange={repRange}
             />
         </Box>
     );

@@ -509,8 +509,11 @@
             "weight": "Poids",
             "reps": "Répétitions",
             "set": "Série {{number}}",
-            "rep": "rép."
-        }
+            "rep": "rép.",
+            "complete": "Valider la série",
+            "target": "objectif {{range}}"
+        },
+        "repRange": "{{range}} reps"
     },
     "routines": {
         "title": "Séances",
@@ -575,7 +578,16 @@
             "discardDescription": "Tes changements ne seront pas enregistrés.",
             "discard": "Abandonner",
             "keep": "Continuer",
-            "emptyExercises": "Ajoute des exercices à cette séance."
+            "emptyExercises": "Ajoute des exercices à cette séance.",
+            "range": "Reps {{range}}",
+            "rangeNone": "Fourchette de reps",
+            "rangeTitle": "Fourchette · {{name}}",
+            "rangeHint": "Affichée pendant la séance à la place des reps à faire",
+            "rangeCustom": "Ou choisis-la toi-même",
+            "rangeMin": "Minimum de reps",
+            "rangeMax": "Maximum de reps",
+            "rangeApply": "OK",
+            "rangeClear": "Pas de fourchette"
         }
     }
 }

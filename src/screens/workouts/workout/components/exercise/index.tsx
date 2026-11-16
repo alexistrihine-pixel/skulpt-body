@@ -63,6 +63,10 @@ const styles = StyleSheet.create((theme, rt) => ({
         marginTop: -theme.space(0.5),
         marginBottom: theme.space(1),
     },
+    exerciseRange: {
+        color: theme.colors.accent,
+        fontWeight: theme.fontWeight.bold.fontWeight,
+    },
     setsContainer: {
         gap: theme.space(1),
         flexWrap: 'wrap',
@@ -164,7 +168,7 @@ const ExerciseContent: FC<{
     restingSetId,
     showGroupIndicator,
 }) => {
-    const { t } = useTranslation(['common']);
+    const { t } = useTranslation(['common', 'screens']);
 
     return (
         <HStack style={styles.exercise}>
@@ -192,6 +196,15 @@ const ExerciseContent: FC<{
                             {item.tracking
                                 .map((v) => t(`exerciseTracking.${v}`, { ns: 'common' }))
                                 .join(' + ')}
+                            {item.repRange ? (
+                                <Text style={styles.exerciseRange}>
+                                    {' · '}
+                                    {t('training.repRange', {
+                                        ns: 'screens',
+                                        range: item.repRange,
+                                    })}
+                                </Text>
+                            ) : null}
                         </Text>
                     </Box>
                 ) : null}

@@ -18,7 +18,7 @@ import { Rest } from '../rest';
 import { formatClockSecondsCompact } from '@/helpers/times';
 import { TimeDurationInput } from '@/components/primitives/time-duration-input';
 import { KeypadField } from '@/components/primitives/keypad-field';
-import { formatSet } from '@/helpers/workouts';
+import { formatRepRange, formatSet } from '@/helpers/workouts';
 import { DistanceInput } from '@/components/primitives/distance-input';
 import { normalizeSetType } from '@/helpers/set-type';
 import { useTranslation } from 'react-i18next';
@@ -259,7 +259,11 @@ const SetItemComponent = ({
                                 field="reps"
                                 value={set.reps}
                                 placeholder={
-                                    previousSet?.reps != null ? String(previousSet.reps) : null
+                                    formatRepRange(
+                                        exerciseInfo?.workoutExercise.repMin,
+                                        exerciseInfo?.workoutExercise.repMax,
+                                    ) ??
+                                    (previousSet?.reps != null ? String(previousSet.reps) : null)
                                 }
                                 style={styles.input(false, isActive, isCompleted, isTimerActive)}
                                 accessibilityLabel={`${t('training.keypad.reps', { ns: 'screens' })} ${index + 1}`}

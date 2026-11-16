@@ -18,6 +18,8 @@ import { getExerciseLibraryProperties } from '@/analytics/helpers';
 
 interface ActionsProps {
     workout?: WorkoutSelect;
+    /** Reports the height of the bottom actions (it grows while the rest timer is shown). */
+    onHeightChange?: (height: number) => void;
 }
 
 const styles = StyleSheet.create((theme, rt) => ({
@@ -52,7 +54,7 @@ const styles = StyleSheet.create((theme, rt) => ({
     },
 }));
 
-export const Actions: FC<ActionsProps> = ({ workout }) => {
+export const Actions: FC<ActionsProps> = ({ workout, onHeightChange }) => {
     const { theme } = useUnistyles();
     const { t } = useTranslation(['common', 'screens']);
     const { track } = useAnalytics();
@@ -116,7 +118,10 @@ export const Actions: FC<ActionsProps> = ({ workout }) => {
     }, [workout, startWorkout, completeWorkout, actionsOpen]);
 
     return (
-        <Box style={styles.bottomActionsContainer}>
+        <Box
+            style={styles.bottomActionsContainer}
+            onLayout={(e) => onHeightChange?.(Math.round(e.nativeEvent.layout.height))}
+        >
             <RestBar />
             <HStack>
                 <Box style={[styles.actionContainer, styles.leftContainer]}>

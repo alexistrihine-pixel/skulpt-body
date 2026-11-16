@@ -9,4 +9,6 @@ export type WorkoutItem = {
     tracking?: ExerciseSelect['tracking'];
     sets?: ExerciseSetSelect[];
     exercise?: ExerciseSelect;
+    /** Target rep range from the routine ("8-10"), if any. */
+    repRange?: string | null;
 };

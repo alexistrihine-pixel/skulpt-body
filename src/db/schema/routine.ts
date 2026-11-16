@@ -34,6 +34,9 @@ export const routineExercise = sqliteTable(
         order: integer('order').notNull(),
         /** Rest after each set in seconds. null = the default from Settings > Rest timer, 0 = none. */
         restTime: integer('rest_time'),
+        /** Target rep range for working sets ("8-10"). Both null = no range. */
+        repMin: integer('rep_min'),
+        repMax: integer('rep_max'),
         createdAt: integer('created_at', { mode: 'timestamp_ms' })
             .notNull()
             .default(sql`(strftime('%s','now') * 1000)`),

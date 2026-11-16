@@ -4,7 +4,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useTranslation } from 'react-i18next';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowDown, ArrowUp, Timer, Trash2, X } from 'lucide-react-native';
+import { ArrowDown, ArrowUp, Target, Timer, Trash2, X } from 'lucide-react-native';
 
 import { ScrollView } from '@/components/primitives/scrollview';
 import { Box } from '@/components/primitives/box';
@@ -26,8 +26,22 @@ import { useRunningWorkoutStatic } from '@/hooks/use-running-workout';
 import { useRoutineDraftStore } from '@/stores/routine-draft';
 import { useRestSettingsStore } from '@/stores/rest-settings';
 import { nanoid } from '@/helpers/nanoid';
+import { formatRepRange } from '@/helpers/workouts';
 
 const REST_OPTIONS: (number | null)[] = [null, 60, 90, 120, 150, 180, 240, 0];
+const RANGE_OPTIONS: [number, number][] = [
+    [5, 8],
+    [6, 8],
+    [6, 10],
+    [8, 10],
+    [8, 12],
+    [10, 12],
+    [12, 15],
+    [15, 20],
+];
+
+/** Working and failure sets follow the rep range; warm-ups and drop sets keep their own reps. */
+const followsRange = (set: RoutineSetDraft) => set.type === 'working' || set.type === 'failure';
 
 const formatClock = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -124,6 +138,52 @@ const styles = StyleSheet.create((theme, rt) => ({
         alignItems: 'center',
         gap: theme.space(1.5),
     }),
+    chips: {
+        flexWrap: 'wrap',
+        gap: theme.space(1.5),
+    },
+    rangeCell: {
+        height: theme.space(9),
+        borderRadius: theme.radius.xl,
+        borderWidth: 2,
+        borderStyle: 'dashed',
+        borderColor: theme.colors.surfaceRaised,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    rangeCellText: {
+        fontWeight: theme.fontWeight.semibold.fontWeight,
+        color: theme.colors.typography,
+        opacity: 0.55,
+    },
+    customRow: {
+        alignItems: 'center',
+        gap: theme.space(2),
+    },
+    customInput: {
+        flex: 1,
+        height: theme.space(12),
+        borderRadius: theme.radius['2xl'],
+        backgroundColor: theme.colors.surfaceRaised,
+        color: theme.colors.typography,
+        textAlign: 'center',
+        fontSize: theme.fontSize.lg.fontSize,
+        fontWeight: theme.fontWeight.bold.fontWeight,
+        paddingVertical: 0,
+    },
+    customDash: {
+        fontSize: theme.fontSize.lg.fontSize,
+        fontWeight: theme.fontWeight.bold.fontWeight,
+        color: theme.colors.typography,
+    },
+    customApply: {
+        height: theme.space(12),
+        paddingHorizontal: theme.space(5),
+        borderRadius: theme.radius['2xl'],
+        backgroundColor: theme.colors.accent,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     restChipText: (custom: boolean) => ({
         fontSize: theme.fontSize.sm.fontSize,
         fontWeight: theme.fontWeight.bold.fontWeight,
@@ -353,6 +413,9 @@ const RoutineEditorScreen: FC = () => {
     const [initialized, setInitialized] = useState(isNew);
     const [dirty, setDirty] = useState(false);
     const [restFor, setRestFor] = useState<string | null>(null);
+    const [rangeFor, setRangeFor] = useState<string | null>(null);
+    const [customMin, setCustomMin] = useState('');
+    const [customMax, setCustomMax] = useState('');
     const [busy, setBusy] = useState(false);
 
     // Copy the saved routine into the editable draft once, during render (no effect needed).
@@ -408,7 +471,14 @@ const RoutineEditorScreen: FC = () => {
                                   time: null,
                                   distance: null,
                               }));
-                    return { key: nanoid(), exerciseId: id, restTime: null, sets };
+                    return {
+                        key: nanoid(),
+                        exerciseId: id,
+                        restTime: null,
+                        repMin: null,
+                        repMax: null,
+                        sets,
+                    };
                 });
                 setDrafts((prevDrafts) => [...prevDrafts, ...added]);
                 setDirty(true);
@@ -515,6 +585,34 @@ const RoutineEditorScreen: FC = () => {
 
     const restDraft = drafts.find((d) => d.key === restFor) ?? null;
     const restExerciseName = restDraft ? (exerciseMap.get(restDraft.exerciseId)?.name ?? '') : '';
+    const rangeDraft = drafts.find((d) => d.key === rangeFor) ?? null;
+    const rangeExerciseName = rangeDraft
+        ? (exerciseMap.get(rangeDraft.exerciseId)?.name ?? '')
+        : '';
+
+    const openRange = (draft: RoutineExerciseDraft) => {
+        setCustomMin(draft.repMin != null ? String(draft.repMin) : '');
+        setCustomMax(draft.repMax != null ? String(draft.repMax) : '');
+        setRangeFor(draft.key);
+    };
+
+    const applyRange = (min: number | null, max: number | null) => {
+        if (rangeDraft) {
+            const lo = min ?? max;
+            const hi = max ?? min;
+            updateDraft(rangeDraft.key, (d) => ({
+                ...d,
+                repMin: lo != null && hi != null ? Math.min(lo, hi) : null,
+                repMax: lo != null && hi != null ? Math.max(lo, hi) : null,
+            }));
+        }
+        setRangeFor(null);
+    };
+
+    const parseCustom = (value: string) => {
+        const n = parseInt(value, 10);
+        return Number.isFinite(n) && n > 0 ? n : null;
+    };
 
     return (
         <Box style={styles.container}>
@@ -569,27 +667,52 @@ const RoutineEditorScreen: FC = () => {
                               })
                             : t('routines.editor.restNone', { ns: 'screens' });
                     const prevSets = (lastTime?.[draft.exerciseId] ?? []) as ExerciseSetSelect[];
+                    const range = formatRepRange(draft.repMin, draft.repMax);
 
                     return (
                         <VStack key={draft.key} style={styles.card}>
                             <HStack style={styles.cardHeader}>
                                 <VStack style={styles.cardTitleBlock}>
                                     <Text style={styles.exerciseName}>{info?.name ?? '…'}</Text>
-                                    <Pressable onPress={() => setRestFor(draft.key)}>
-                                        <HStack style={styles.restChip(custom)}>
-                                            <Timer
-                                                size={theme.space(3.5)}
-                                                color={
-                                                    custom
-                                                        ? theme.colors.accent
-                                                        : theme.colors.typography
-                                                }
-                                            />
-                                            <Text style={styles.restChipText(custom)}>
-                                                {restText}
-                                            </Text>
-                                        </HStack>
-                                    </Pressable>
+                                    <HStack style={styles.chips}>
+                                        <Pressable onPress={() => setRestFor(draft.key)}>
+                                            <HStack style={styles.restChip(custom)}>
+                                                <Timer
+                                                    size={theme.space(3.5)}
+                                                    color={
+                                                        custom
+                                                            ? theme.colors.accent
+                                                            : theme.colors.typography
+                                                    }
+                                                />
+                                                <Text style={styles.restChipText(custom)}>
+                                                    {restText}
+                                                </Text>
+                                            </HStack>
+                                        </Pressable>
+                                        <Pressable onPress={() => openRange(draft)}>
+                                            <HStack style={styles.restChip(!!range)}>
+                                                <Target
+                                                    size={theme.space(3.5)}
+                                                    color={
+                                                        range
+                                                            ? theme.colors.accent
+                                                            : theme.colors.typography
+                                                    }
+                                                />
+                                                <Text style={styles.restChipText(!!range)}>
+                                                    {range
+                                                        ? t('routines.editor.range', {
+                                                              ns: 'screens',
+                                                              range,
+                                                          })
+                                                        : t('routines.editor.rangeNone', {
+                                                              ns: 'screens',
+                                                          })}
+                                                </Text>
+                                            </HStack>
+                                        </Pressable>
+                                    </HStack>
                                 </VStack>
                                 <Pressable
                                     style={styles.iconButton}
@@ -685,22 +808,31 @@ const RoutineEditorScreen: FC = () => {
                                                 }))
                                             }
                                         />
-                                        <NumberCell
-                                            value={set.reps}
-                                            decimal={false}
-                                            style={[styles.cell, styles.colReps]}
-                                            accessibilityLabel={`${t('routines.editor.reps', { ns: 'screens' })} ${setIndex + 1}`}
-                                            onChange={(value) =>
-                                                updateDraft(draft.key, (d) => ({
-                                                    ...d,
-                                                    sets: d.sets.map((s) =>
-                                                        s.key === set.key
-                                                            ? { ...s, reps: value }
-                                                            : s,
-                                                    ),
-                                                }))
-                                            }
-                                        />
+                                        {range && followsRange(set) ? (
+                                            <Pressable
+                                                style={[styles.rangeCell, styles.colReps]}
+                                                onPress={() => openRange(draft)}
+                                            >
+                                                <Text style={styles.rangeCellText}>{range}</Text>
+                                            </Pressable>
+                                        ) : (
+                                            <NumberCell
+                                                value={set.reps}
+                                                decimal={false}
+                                                style={[styles.cell, styles.colReps]}
+                                                accessibilityLabel={`${t('routines.editor.reps', { ns: 'screens' })} ${setIndex + 1}`}
+                                                onChange={(value) =>
+                                                    updateDraft(draft.key, (d) => ({
+                                                        ...d,
+                                                        sets: d.sets.map((s) =>
+                                                            s.key === set.key
+                                                                ? { ...s, reps: value }
+                                                                : s,
+                                                        ),
+                                                    }))
+                                                }
+                                            />
+                                        )}
                                         <Pressable
                                             style={[styles.iconButton, styles.colRemove]}
                                             onPress={() =>
@@ -831,6 +963,90 @@ const RoutineEditorScreen: FC = () => {
                                 );
                             })}
                         </Box>
+                    </RNPressable>
+                </RNPressable>
+            </Modal>
+
+            <Modal
+                visible={!!rangeDraft}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setRangeFor(null)}
+            >
+                <RNPressable style={styles.backdrop} onPress={() => setRangeFor(null)}>
+                    <RNPressable style={styles.sheet} onPress={() => undefined}>
+                        <Box style={styles.sheetHandle} />
+                        <VStack style={{ gap: theme.space(0.5) }}>
+                            <Text style={styles.sheetTitle}>
+                                {t('routines.editor.rangeTitle', {
+                                    ns: 'screens',
+                                    name: rangeExerciseName,
+                                })}
+                            </Text>
+                            <Text style={styles.sheetHint}>
+                                {t('routines.editor.rangeHint', { ns: 'screens' })}
+                            </Text>
+                        </VStack>
+                        <Box style={styles.optionGrid}>
+                            {RANGE_OPTIONS.map(([min, max]) => {
+                                const selected =
+                                    rangeDraft?.repMin === min && rangeDraft?.repMax === max;
+                                return (
+                                    <Pressable
+                                        key={`${min}-${max}`}
+                                        style={styles.option(selected)}
+                                        onPress={() => applyRange(min, max)}
+                                    >
+                                        <Text style={styles.optionText(selected)}>
+                                            {min}-{max}
+                                        </Text>
+                                    </Pressable>
+                                );
+                            })}
+                        </Box>
+                        <Text style={styles.sheetHint}>
+                            {t('routines.editor.rangeCustom', { ns: 'screens' })}
+                        </Text>
+                        <HStack style={styles.customRow}>
+                            <TextInput
+                                value={customMin}
+                                onChangeText={(v) => setCustomMin(v.replace(/[^0-9]/g, ''))}
+                                keyboardType="number-pad"
+                                placeholder="8"
+                                placeholderTextColor={theme.colors.neutral[500]}
+                                style={styles.customInput}
+                                accessibilityLabel={t('routines.editor.rangeMin', {
+                                    ns: 'screens',
+                                })}
+                            />
+                            <Text style={styles.customDash}>–</Text>
+                            <TextInput
+                                value={customMax}
+                                onChangeText={(v) => setCustomMax(v.replace(/[^0-9]/g, ''))}
+                                keyboardType="number-pad"
+                                placeholder="10"
+                                placeholderTextColor={theme.colors.neutral[500]}
+                                style={styles.customInput}
+                                accessibilityLabel={t('routines.editor.rangeMax', {
+                                    ns: 'screens',
+                                })}
+                            />
+                            <Pressable
+                                style={styles.customApply}
+                                onPress={() =>
+                                    applyRange(parseCustom(customMin), parseCustom(customMax))
+                                }
+                            >
+                                <Text style={styles.optionText(true)}>
+                                    {t('routines.editor.rangeApply', { ns: 'screens' })}
+                                </Text>
+                            </Pressable>
+                        </HStack>
+                        <Pressable style={styles.addSet} onPress={() => applyRange(null, null)}>
+                            <Text style={styles.addSetText}>
+                                {t('routines.editor.rangeClear', { ns: 'screens' })}
+                            </Text>
+                        </Pressable>
                     </RNPressable>
                 </RNPressable>
             </Modal>

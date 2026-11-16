@@ -49,7 +49,7 @@ const styles = StyleSheet.create((theme) => ({
         gap: theme.space(2),
     },
     stepButton: {
-        width: theme.space(16),
+        width: theme.space(14),
         height: theme.space(12),
         borderRadius: theme.radius['2xl'],
         backgroundColor: theme.colors.surfaceRaised,
@@ -78,7 +78,7 @@ const styles = StyleSheet.create((theme) => ({
         fontVariant: ['tabular-nums'],
     },
     skipButton: {
-        minWidth: theme.space(22),
+        minWidth: theme.space(20),
         height: theme.space(12),
         paddingHorizontal: theme.space(3),
         borderRadius: theme.radius['2xl'],
@@ -180,7 +180,7 @@ export const RestBar: FC<RestBarProps> = ({ currentWorkoutExerciseId }) => {
                     <Text style={styles.clockLabel}>
                         {t('training.restBar.title', { ns: 'screens' })}
                     </Text>
-                    <Text style={styles.clockText}>
+                    <Text style={styles.clockText} numberOfLines={1} adjustsFontSizeToFit>
                         {formatClockSecondsCompact(restRemainingSeconds)}
                     </Text>
                 </VStack>

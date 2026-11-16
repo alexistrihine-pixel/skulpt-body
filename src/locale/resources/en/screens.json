@@ -509,8 +509,11 @@
             "weight": "Weight",
             "reps": "Reps",
             "set": "Set {{number}}",
-            "rep": "rep"
-        }
+            "rep": "rep",
+            "complete": "Complete set",
+            "target": "target {{range}}"
+        },
+        "repRange": "{{range}} reps"
     },
     "routines": {
         "title": "Workouts",
@@ -575,7 +578,16 @@
             "discardDescription": "Your changes will not be saved.",
             "discard": "Discard",
             "keep": "Keep editing",
-            "emptyExercises": "Add exercises to this workout."
+            "emptyExercises": "Add exercises to this workout.",
+            "range": "Reps {{range}}",
+            "rangeNone": "Rep range",
+            "rangeTitle": "Rep range · {{name}}",
+            "rangeHint": "Shown during the workout instead of a rep target",
+            "rangeCustom": "Or set your own",
+            "rangeMin": "Minimum reps",
+            "rangeMax": "Maximum reps",
+            "rangeApply": "OK",
+            "rangeClear": "No rep range"
         }
     }
 }

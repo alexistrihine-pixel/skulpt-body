@@ -1,8 +1,8 @@
-import { FC, ReactNode, useCallback, useEffect } from 'react';
+import { FC, ReactNode, useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import * as Haptics from 'expo-haptics';
-import { ArrowRight, Delete, KeyboardOff, Minus, Plus } from 'lucide-react-native';
+import { ArrowRight, Check, Delete, KeyboardOff, Minus, Plus } from 'lucide-react-native';
 import { useShallow } from 'zustand/react/shallow';
 
 import { Box } from '@/components/primitives/box';
@@ -24,6 +24,18 @@ interface KeypadProps {
     getSetLabel: (setId: string) => string;
     weightStep?: number;
     weightUnits?: string | null;
+    /**
+     * When it returns true for a set, the → key on that set's last field completes the set
+     * (which starts the rest timer) instead of moving to the next set.
+     */
+    canCompleteSet?: (setId: string) => boolean;
+    /** Completes the set; `typed` is the value of the field being edited, as typed. */
+    onCompleteSet?: (
+        setId: string,
+        typed: { field: KeypadTarget['field']; value: number | null },
+    ) => void;
+    /** Target rep range shown in the title row while editing reps ("8-10"). */
+    repRange?: string | null;
 }
 
 const styles = StyleSheet.create((theme, rt) => ({
@@ -117,6 +129,9 @@ export const Keypad: FC<KeypadProps> = ({
     getSetLabel,
     weightStep = 2.5,
     weightUnits,
+    canCompleteSet,
+    onCompleteSet,
+    repRange,
 }) => {
     const { t } = useTranslation(['screens']);
     const { theme } = useUnistyles();
@@ -181,14 +196,33 @@ export const Keypad: FC<KeypadProps> = ({
         [target, draft, getValue, weightStep, commit],
     );
 
+    const followingField = useMemo(() => {
+        if (!target) return undefined;
+        const index = fields.findIndex((f) => f.setId === target.setId && f.field === target.field);
+        return index >= 0 ? fields[index + 1] : undefined;
+    }, [target, fields]);
+
+    const completesSet =
+        !!target &&
+        !!onCompleteSet &&
+        (!followingField || followingField.setId !== target.setId) &&
+        (canCompleteSet?.(target.setId) ?? false);
+
     const next = useCallback(() => {
         if (!target) return;
+        if (completesSet && onCompleteSet) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            const value = draft !== '' ? parse(draft) : null;
+            const typed =
+                value == null ? null : target.field === 'reps' ? Math.round(value) : round2(value);
+            close();
+            onCompleteSet(target.setId, { field: target.field, value: typed });
+            return;
+        }
         Haptics.selectionAsync();
-        const index = fields.findIndex((f) => f.setId === target.setId && f.field === target.field);
-        const following = index >= 0 ? fields[index + 1] : undefined;
-        if (following) open(following, getValue(following));
+        if (followingField) open(followingField, getValue(followingField));
         else close();
-    }, [target, fields, open, close, getValue]);
+    }, [target, completesSet, onCompleteSet, draft, followingField, open, close, getValue]);
 
     if (!target) return null;
 
@@ -272,10 +306,16 @@ export const Keypad: FC<KeypadProps> = ({
         ),
         key(
             'next',
-            <ArrowRight size={theme.space(7)} color={theme.colors.onAccent} strokeWidth={2.5} />,
+            completesSet ? (
+                <Check size={theme.space(7)} color={theme.colors.onAccent} strokeWidth={3} />
+            ) : (
+                <ArrowRight size={theme.space(7)} color={theme.colors.onAccent} strokeWidth={2.5} />
+            ),
             next,
             'primary',
-            t('training.keypad.next', { ns: 'screens' }),
+            t(completesSet ? 'training.keypad.complete' : 'training.keypad.next', {
+                ns: 'screens',
+            }),
         ),
     ];
 
@@ -290,6 +330,9 @@ export const Keypad: FC<KeypadProps> = ({
                     {t(isWeight ? 'training.keypad.weight' : 'training.keypad.reps', {
                         ns: 'screens',
                     })}
+                    {!isWeight && repRange
+                        ? ` · ${t('training.keypad.target', { ns: 'screens', range: repRange })}`
+                        : ''}
                 </Text>
                 {restRemainingSeconds != null && restRemainingSeconds > 0 && (
                     <HStack style={styles.rest}>

@@ -143,7 +143,32 @@ const formatWeekRange = (start: Date, end: Date, locale: string): string => {
     }
 };
 
-export const formatSet = (exercise: ExerciseSelect | undefined, set: ExerciseSetSelect) => {
+/** "8-10" for a rep range, "10" when both ends are equal, null when there is no range. */
+export const formatRepRange = (
+    min: number | null | undefined,
+    max: number | null | undefined,
+): string | null => {
+    const lo = min ?? max ?? null;
+    const hi = max ?? min ?? null;
+    if (lo == null || hi == null) return null;
+    return lo === hi ? `${lo}` : `${Math.min(lo, hi)}-${Math.max(lo, hi)}`;
+};
+
+/** Reps to record for a set completed without typing reps: the top of the rep range. */
+export const repRangeFallback = (
+    min: number | null | undefined,
+    max: number | null | undefined,
+): number | null => {
+    const values = [min, max].filter((v): v is number => v != null);
+    return values.length > 0 ? Math.max(...values) : null;
+};
+
+export const formatSet = (
+    exercise: ExerciseSelect | undefined,
+    set: ExerciseSetSelect,
+    /** Shown in place of reps while the set has none yet (e.g. "8-10"). */
+    repRange?: string | null,
+) => {
     if (!exercise) return '';
     const parts: string[] = [];
     const tracking: ExerciseSelect['tracking'] = Array.isArray(exercise.tracking)
@@ -156,6 +181,8 @@ export const formatSet = (exercise: ExerciseSelect | undefined, set: ExerciseSet
         }
         if (key === 'reps' && set.reps != null) {
             parts.push(`${set.reps}`);
+        } else if (key === 'reps' && repRange) {
+            parts.push(repRange);
         }
         if (key === 'time' && set.time != null) {
             parts.push(formatClockSecondsCompact(set.time));

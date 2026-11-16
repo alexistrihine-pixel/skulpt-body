@@ -27,6 +27,9 @@ export type RoutineExerciseDraft = {
     key: string;
     exerciseId: string;
     restTime: number | null;
+    /** Target rep range for working sets; both null = none. */
+    repMin: number | null;
+    repMax: number | null;
     sets: RoutineSetDraft[];
 };
 
@@ -163,6 +166,8 @@ export const saveRoutine = async (
             exerciseId: ex.exerciseId,
             order: index,
             restTime: ex.restTime,
+            repMin: ex.repMin,
+            repMax: ex.repMax,
             createdAt: now,
             updatedAt: now,
         }));
@@ -207,6 +212,8 @@ export const toRoutineDrafts = (details: RoutineDetails): RoutineExerciseDraft[]
         key: item.routineExercise.id,
         exerciseId: item.exercise.id,
         restTime: item.routineExercise.restTime,
+        repMin: item.routineExercise.repMin,
+        repMax: item.routineExercise.repMax,
         sets: item.sets.map((set) => ({
             key: set.id,
             type: set.type,
@@ -247,6 +254,8 @@ const getWorkoutAsDrafts = async (workoutId: string): Promise<RoutineExerciseDra
         key: nanoid(),
         exerciseId: row.workoutExercise.exerciseId,
         restTime: null,
+        repMin: row.workoutExercise.repMin,
+        repMax: row.workoutExercise.repMax,
         sets: sortByOrder(sets.filter((s) => s.workoutExerciseId === row.workoutExercise.id)).map(
             (s) => ({
                 key: nanoid(),
@@ -272,7 +281,7 @@ const getLatestCompletedWorkoutIdByName = async (name: string) => {
 
 /**
  * Replaces the routine's exercises and sets with those of the last completed workout that has
- * the same name. Rest times chosen per exercise are kept for exercises still in the routine.
+ * the same name. Rest times and rep ranges chosen per exercise are kept for exercises still in the routine.
  */
 export const updateRoutineFromLastWorkout = async (routineId: string): Promise<boolean> => {
     const details = await getRoutineDetails(routineId);
@@ -280,13 +289,18 @@ export const updateRoutineFromLastWorkout = async (routineId: string): Promise<b
     const workoutId = await getLatestCompletedWorkoutIdByName(details.routine.name);
     if (!workoutId) return false;
 
-    const restByExercise = new Map(
-        details.exercises.map((item) => [item.exercise.id, item.routineExercise.restTime]),
+    const settingsByExercise = new Map(
+        details.exercises.map((item) => [item.exercise.id, item.routineExercise]),
     );
-    const drafts = (await getWorkoutAsDrafts(workoutId)).map((draft) => ({
-        ...draft,
-        restTime: restByExercise.get(draft.exerciseId) ?? null,
-    }));
+    const drafts = (await getWorkoutAsDrafts(workoutId)).map((draft) => {
+        const previous = settingsByExercise.get(draft.exerciseId);
+        return {
+            ...draft,
+            restTime: previous?.restTime ?? null,
+            repMin: previous ? previous.repMin : draft.repMin,
+            repMax: previous ? previous.repMax : draft.repMax,
+        };
+    });
     await saveRoutine(routineId, details.routine.name, drafts);
     return true;
 };
@@ -370,9 +384,12 @@ export const startRoutine = async (routineId: string): Promise<string> => {
             exerciseId: item.exercise.id,
             groupId,
             orderInGroup: 0,
+            repMin: item.routineExercise.repMin,
+            repMax: item.routineExercise.repMax,
             createdAt: now,
             updatedAt: now,
         });
+        const hasRange = item.routineExercise.repMin != null || item.routineExercise.repMax != null;
         const sets = item.sets.length > 0 ? item.sets : [null];
         sets.forEach((set, setIndex) => {
             const tracks = item.exercise.tracking ?? [];
@@ -384,7 +401,15 @@ export const startRoutine = async (routineId: string): Promise<string> => {
                 round: setIndex,
                 weight: set ? set.weight : tracks.includes('weight') ? 0 : null,
                 weightUnits: item.exercise.weightUnits,
-                reps: set ? set.reps : tracks.includes('reps') ? 0 : null,
+                // With a rep range, working sets start empty so the range shows instead.
+                reps:
+                    set && hasRange && (set.type === 'working' || set.type === 'failure')
+                        ? null
+                        : set
+                          ? set.reps
+                          : tracks.includes('reps') && !hasRange
+                            ? 0
+                            : null,
                 time: set ? set.time : tracks.includes('time') ? 0 : null,
                 distance: set ? set.distance : tracks.includes('distance') ? 0 : null,
                 distanceUnits: item.exercise.distanceUnits,

@@ -64,7 +64,7 @@ const ExerciseSetComponent: FC<ExerciseSetProps> = ({
                     {setTypeShort}
                 </Text>
                 <Text style={styles.setContent(isActive, isFinished, isTimerActive)}>
-                    {formatSet(workout.exercise, set)}
+                    {formatSet(workout.exercise, set, workout.repRange)}
                 </Text>
             </HStack>
         </Box>

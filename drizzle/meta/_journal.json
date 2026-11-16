@@ -169,6 +169,13 @@
       "when": 1794784219252,
       "tag": "0023_curved_scalphunter",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1794812071884,
+      "tag": "0024_plain_gunslinger",
+      "breakpoints": true
     }
   ]
 }
