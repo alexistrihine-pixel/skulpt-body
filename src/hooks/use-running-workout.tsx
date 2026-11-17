@@ -10,7 +10,8 @@ import {
     useRef,
 } from 'react';
 import { useGlobalSearchParams, router } from 'expo-router';
-import { Alert, AppState, Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
+import { appAlert } from '@/stores/dialog';
 import { useTranslation } from 'react-i18next';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { eq } from 'drizzle-orm';
@@ -1598,12 +1599,12 @@ const useRunningWorkoutProvider = () => {
             phoneHealthPermissionsGrantedRef.current = healthReadiness.permissionsGranted;
 
             if (!healthReadiness.permissionsGranted) {
-                // Alert.alert(
+                // appAlert(
                 //     'Health access incomplete',
                 //     'Workout tracking can start, but heart-rate zones may stay empty until Health permissions are granted.',
                 // );
             } else if (!healthReadiness.hasResolvedMhr) {
-                // Alert.alert(
+                // appAlert(
                 //     'Max heart rate not configured',
                 //     'Set your birthday or manual max heart rate in Heart Rate settings to enable heart-rate zones.',
                 // );
@@ -1621,7 +1622,7 @@ const useRunningWorkoutProvider = () => {
 
     const completeWorkout = useCallback(() => {
         if (!runningWorkout) return;
-        Alert.alert(
+        appAlert(
             t('completeWorkout', { ns: 'common' }),
             undefined,
             [
@@ -1652,6 +1653,8 @@ const useRunningWorkoutProvider = () => {
                                     if (!completion.didComplete) return;
                                     const data = completion.workout;
                                     playWorkoutStop();
+                                    // Back to the home screen once the workout is saved.
+                                    router.dismissTo('/');
                                     runInBackground(
                                         () =>
                                             syncCompletedWorkoutHealth(data, {

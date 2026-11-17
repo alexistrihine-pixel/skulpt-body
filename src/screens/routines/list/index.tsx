@@ -1,5 +1,6 @@
 import { FC, useCallback, useMemo, useState } from 'react';
-import { Alert, Modal, Pressable as RNPressable } from 'react-native';
+import { Modal, Pressable as RNPressable } from 'react-native';
+import { appAlert } from '@/stores/dialog';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
@@ -192,7 +193,7 @@ const RoutinesScreen: FC = () => {
         async (routineId: string) => {
             if (startingId) return;
             if (runningWorkout) {
-                Alert.alert(
+                appAlert(
                     t('routines.running.title', { ns: 'screens' }),
                     t('routines.running.description', { ns: 'screens' }),
                     [
@@ -235,7 +236,7 @@ const RoutinesScreen: FC = () => {
         if (!menuFor) return;
         const { id, name } = menuFor.routine;
         setMenuFor(null);
-        Alert.alert(
+        appAlert(
             t('routines.menu.updateTitle', { ns: 'screens', name }),
             t('routines.menu.updateDescription', { ns: 'screens', name }),
             [
@@ -245,7 +246,7 @@ const RoutinesScreen: FC = () => {
                     onPress: async () => {
                         const updated = await updateFromLast.mutateAsync(id);
                         if (!updated) {
-                            Alert.alert(t('routines.menu.updateMissing', { ns: 'screens' }));
+                            appAlert(t('routines.menu.updateMissing', { ns: 'screens' }));
                         }
                     },
                 },
@@ -257,7 +258,7 @@ const RoutinesScreen: FC = () => {
         if (!menuFor) return;
         const { id, name } = menuFor.routine;
         setMenuFor(null);
-        Alert.alert(
+        appAlert(
             t('routines.menu.deleteTitle', { ns: 'screens', name }),
             t('routines.menu.deleteDescription', { ns: 'screens' }),
             [

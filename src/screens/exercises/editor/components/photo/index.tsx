@@ -1,5 +1,6 @@
 import { FC, useState } from 'react';
-import { Alert, Linking } from 'react-native';
+import { Linking } from 'react-native';
+import { appAlert } from '@/stores/dialog';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Image as ExpoImage } from 'expo-image';
@@ -68,7 +69,7 @@ export const PhotoField: FC<PhotoFieldProps> = ({ value, onChange }) => {
             const result = await pickExerciseImage(source);
             if (result.status === 'picked') onChange(result.uri);
             if (result.status === 'denied') {
-                Alert.alert(
+                appAlert(
                     t('exercise-create.photoPermissionTitle', { ns: 'screens' }),
                     t('exercise-create.photoPermission', { ns: 'screens' }),
                     [

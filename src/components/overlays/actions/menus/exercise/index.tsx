@@ -1,5 +1,5 @@
 import { FC, useCallback } from 'react';
-import { Alert } from 'react-native';
+import { appAlert } from '@/stores/dialog';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { useShallow } from 'zustand/react/shallow';
@@ -51,7 +51,7 @@ const ExerciseMenu: FC = () => {
         if (!payload || !('exerciseId' in payload) || !canDelete) return;
 
         close();
-        Alert.alert(t('exercise.deleteExerciseAlert', { ns: 'screens' }), undefined, [
+        appAlert(t('exercise.deleteExerciseAlert', { ns: 'screens' }), undefined, [
             {
                 text: t('cancel', { ns: 'common' }),
                 style: 'cancel',

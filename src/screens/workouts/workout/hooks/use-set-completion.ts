@@ -13,7 +13,7 @@ import { useRunningWorkoutTicker } from '@/hooks/use-running-workout';
 import { repRangeFallback } from '@/helpers/workouts';
 import { finalizeRestNow, startNextSetOrExercise } from '@/services/set-transitions';
 import { resolveRestTime } from '@/stores/rest-settings';
-import type { KeypadTarget } from '@/stores/keypad';
+import { useKeypadStore, type KeypadTarget } from '@/stores/keypad';
 
 type WorkoutDetails = ReturnType<typeof useWorkoutWithDetails>['data'];
 
@@ -45,6 +45,8 @@ export const useSetCompletion = (workoutDetails: WorkoutDetails) => {
     const completeFromList = useCallback(
         async (setId: string, typed?: CompleteSetTyped) => {
             if (!workoutDetails || workoutDetails.workout.status !== 'in_progress') return;
+            // Validating a set puts the number pad away (values are saved as they are typed).
+            useKeypadStore.getState().close();
             const info = workoutDetails.exercises.find((ex) => ex.sets.some((s) => s.id === setId));
             if (!info) return;
             const set = await getExerciseSetById(setId);

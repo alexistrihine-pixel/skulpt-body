@@ -24,6 +24,7 @@ import { useScreen } from '@/hooks/use-screen';
 import { NotificationsProvider } from '@/hooks/use-notifications';
 import Actions from '@/components/overlays/actions';
 import RestInput from '@/components/overlays/rest';
+import { AppDialog } from '@/components/overlays/dialog';
 import { RunningWorkoutProvider } from '@/hooks/use-running-workout';
 import { AnalyticsProvider } from '@/hooks/use-analytics';
 import { AnalyticsTracker } from '@/analytics/tracker';
@@ -179,6 +180,7 @@ const App: FC = () => {
                         </Stack>
                         <Actions />
                         <RestInput />
+                        <AppDialog />
                     </BottomSheetModalProvider>
                 </StoreReviewGateProvider>
             </RunningWorkoutProvider>

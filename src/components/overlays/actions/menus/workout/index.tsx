@@ -1,5 +1,5 @@
 import { FC, useCallback } from 'react';
-import { Alert } from 'react-native';
+import { appAlert } from '@/stores/dialog';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { useShallow } from 'zustand/react/shallow';
@@ -38,7 +38,7 @@ const WorkoutMenu: FC = () => {
         const workoutId = payload.workoutId;
         close();
 
-        Alert.alert(t('workout.deleteWorkoutAlert', { ns: 'screens' }), undefined, [
+        appAlert(t('workout.deleteWorkoutAlert', { ns: 'screens' }), undefined, [
             {
                 text: t('cancel', { ns: 'common' }),
                 style: 'cancel',

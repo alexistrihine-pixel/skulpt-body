@@ -1,5 +1,6 @@
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, BackHandler, Modal, Pressable as RNPressable, TextInput } from 'react-native';
+import { BackHandler, Modal, Pressable as RNPressable, TextInput } from 'react-native';
+import { appAlert } from '@/stores/dialog';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useTranslation } from 'react-i18next';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -521,7 +522,7 @@ const RoutineEditorScreen: FC = () => {
             leave();
             return true;
         }
-        Alert.alert(
+        appAlert(
             t('routines.editor.discardTitle', { ns: 'screens' }),
             t('routines.editor.discardDescription', { ns: 'screens' }),
             [
@@ -565,7 +566,7 @@ const RoutineEditorScreen: FC = () => {
     const handleStart = useCallback(async () => {
         if (busy) return;
         if (runningWorkout) {
-            Alert.alert(
+            appAlert(
                 t('routines.running.title', { ns: 'screens' }),
                 t('routines.running.description', { ns: 'screens' }),
             );

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Alert, Linking, Platform, Share } from 'react-native';
+import { Linking, Platform, Share } from 'react-native';
+import { appAlert } from '@/stores/dialog';
 import { router } from 'expo-router';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useTranslation } from 'react-i18next';
@@ -164,7 +165,7 @@ const SettingsScreen = () => {
     };
 
     const handleResetWatchSync = () => {
-        Alert.alert(
+        appAlert(
             t('settings.items.resetWatchSync.confirmTitle', { ns: 'screens' }),
             t('settings.items.resetWatchSync.confirmDescription', { ns: 'screens' }),
             [
@@ -178,7 +179,7 @@ const SettingsScreen = () => {
                     onPress: () => {
                         try {
                             resetWatchSync();
-                            Alert.alert(
+                            appAlert(
                                 t('settings.items.resetWatchSync.successTitle', { ns: 'screens' }),
                                 t('settings.items.resetWatchSync.successDescription', {
                                     ns: 'screens',

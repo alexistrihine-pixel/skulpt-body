@@ -1,5 +1,5 @@
 import { FC, useCallback } from 'react';
-import { Alert } from 'react-native';
+import { appAlert } from '@/stores/dialog';
 import { usePathname, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
@@ -67,7 +67,7 @@ const WorkoutExerciseMenu: FC = () => {
         if (!workoutId || !workoutExerciseId || deleteWorkoutExercise.isPending) return;
 
         close();
-        Alert.alert(t('workoutExercise.deleteAlert', { ns: 'screens' }), undefined, [
+        appAlert(t('workoutExercise.deleteAlert', { ns: 'screens' }), undefined, [
             {
                 text: t('cancel', { ns: 'common' }),
                 style: 'cancel',
