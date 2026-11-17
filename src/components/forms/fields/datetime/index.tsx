@@ -19,6 +19,7 @@ import { Box, BoxProps } from '@/components/primitives/box';
 import { Text } from '@/components/primitives/text';
 import { Pressable } from '@/components/primitives/pressable';
 import { useUser } from '@/hooks/use-user';
+import { CalendarDialog } from '@/components/overlays/calendar';
 
 import { Error } from '../components';
 
@@ -188,28 +189,25 @@ export function Datetime<T extends FieldValues, TName extends FieldPath<T>>({
                                     <Text style={styles.androidValueText}>{formattedTime}</Text>
                                 </Pressable>
                             )}
-                            {androidPickerMode && (
+                            <CalendarDialog
+                                visible={androidPickerMode === 'date'}
+                                value={pickerValue}
+                                minimumDate={minimumDate}
+                                maximumDate={maximumDate}
+                                onCancel={() => setAndroidPickerMode(null)}
+                                onConfirm={(selected) => {
+                                    setAndroidPickerMode(null);
+                                    onChange(mergeDate(pickerValue, selected));
+                                }}
+                            />
+                            {androidPickerMode === 'time' && (
                                 <DateTimePicker
                                     value={pickerValue}
-                                    mode={androidPickerMode}
+                                    mode="time"
                                     locale={i18n.language}
                                     display="default"
-                                    minimumDate={
-                                        androidPickerMode === 'date' ? minimumDate : undefined
-                                    }
-                                    maximumDate={
-                                        androidPickerMode === 'date' ? maximumDate : undefined
-                                    }
-                                    is24Hour={
-                                        androidPickerMode === 'time'
-                                            ? user?.timeFormat === '24h'
-                                            : undefined
-                                    }
-                                    onChange={
-                                        androidPickerMode === 'date'
-                                            ? handleDateChange
-                                            : handleTimeChange
-                                    }
+                                    is24Hour={user?.timeFormat === '24h'}
+                                    onChange={handleTimeChange}
                                     themeVariant={rt.themeName}
                                     textColor={theme.colors.typography}
                                     accentColor={theme.colors.neutral[950]}

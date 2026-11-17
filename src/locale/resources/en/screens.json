@@ -95,6 +95,22 @@
             "sessions_one": "{{count}} session",
             "sessions_other": "{{count}} sessions",
             "kSuffix": "K"
+        },
+        "sets": {
+            "title": "Sets per week",
+            "lastWeek": "Last week",
+            "average": "{{count}}-week average",
+            "groups": "Muscle groups",
+            "tapHint": "Tap a group",
+            "detail": "{{group}} · detail",
+            "total_one": "{{value}} set",
+            "total_other": "{{value}} sets",
+            "unspecified": "Unspecified",
+            "legendUnit": "sets",
+            "footnote": "One ring = 5 sets, 4 full rings = 16 sets or more. A secondary muscle counts as half a set.",
+            "close": "Close detail",
+            "showDetail": "{{group}}: {{value}} sets. Show detail",
+            "empty": "No completed sets in this period."
         }
     },
     "exercises": {

@@ -35,6 +35,8 @@ import {
     fetchWorkoutDaySummary,
     fetchWorkoutDayHealthStats,
     fetchStrengthRadarStats,
+    fetchWeeklyMuscleSets,
+    WeeklyMuscleSets,
     WorkoutStats,
     WorkoutDaySummary,
     StrengthRadarStats,
@@ -855,6 +857,18 @@ export const useStrengthRadarStats = (): StrengthRadarStats => {
     });
 
     return stats;
+};
+
+/** Sets per muscle group / sub-muscle for the last full weeks, oldest first. */
+export const useWeeklyMuscleSets = (weeksCount = 6) => {
+    const { user } = useUser();
+
+    return useQuery<WeeklyMuscleSets[]>({
+        queryKey: ['workout-stats', 'weekly-muscle-sets', user?.id, weeksCount],
+        queryFn: () => fetchWeeklyMuscleSets(weeksCount),
+        enabled: !!user?.id,
+        staleTime: 60000 * 10,
+    });
 };
 
 const defaultDaySummary: WorkoutDaySummary = {

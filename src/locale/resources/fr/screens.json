@@ -95,6 +95,22 @@
             "sessions_one": "{{count}} séance",
             "sessions_other": "{{count}} séances",
             "kSuffix": "k"
+        },
+        "sets": {
+            "title": "Séries par semaine",
+            "lastWeek": "Semaine dernière",
+            "average": "Moyenne {{count}} sem.",
+            "groups": "Groupes musculaires",
+            "tapHint": "Touche un groupe",
+            "detail": "{{group}} · détail",
+            "total_one": "{{value}} série",
+            "total_other": "{{value}} séries",
+            "unspecified": "Non précisé",
+            "legendUnit": "séries",
+            "footnote": "Un anneau = 5 séries, 4 anneaux pleins = 16 séries ou plus. Un muscle secondaire compte pour une demi-série.",
+            "close": "Fermer le détail",
+            "showDetail": "{{group}} : {{value}} séries. Afficher le détail",
+            "empty": "Aucune série terminée sur cette période."
         }
     },
     "exercises": {

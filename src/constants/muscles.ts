@@ -260,6 +260,27 @@ export const getTopLevelMuscleValue = (value: string | null | undefined): string
     return muscleToTopLevelMap[normalizedValue] || normalizedValue;
 };
 
+/**
+ * The muscle right under the top-level group (e.g. `brachialis` -> `biceps`,
+ * `lats` -> `lats`). A top-level value itself (`chest`) returns itself.
+ */
+export const getSecondLevelMuscleValue = (value: string | null | undefined): string | null => {
+    const normalizedValue = normalizeMuscleValue(value);
+    if (!normalizedValue) return null;
+    const topLevel = muscleToTopLevelMap[normalizedValue];
+    if (!topLevel) return null;
+    if (normalizedValue === topLevel) return topLevel;
+
+    let current = normalizedValue;
+    let parent = muscleParentMap[current] || null;
+    while (parent && parent !== topLevel) {
+        current = parent;
+        parent = muscleParentMap[current] || null;
+    }
+
+    return current;
+};
+
 const isMuscleAncestor = (candidate: string, value: string): boolean => {
     let current = muscleParentMap[value] || null;
 

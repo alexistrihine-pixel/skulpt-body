@@ -23,7 +23,11 @@ import { nanoid } from '@/helpers/nanoid';
 import { reportError } from '@/services/error-reporting';
 import { computeWorkoutStats } from '@/services/workout-health-stats';
 import { HealthStats } from '@/types/health-stats';
-import { getTopLevelMuscleValue, getTopLevelMuscleValues } from '@/constants/muscles';
+import {
+    getSecondLevelMuscleValue,
+    getTopLevelMuscleValue,
+    getTopLevelMuscleValues,
+} from '@/constants/muscles';
 import { isRestFinalized } from '@/helpers/rest';
 
 import { queueSyncOperation, queueSyncOperations } from '../sync';
@@ -2046,4 +2050,99 @@ export const fetchStrengthRadarStats = async (
         workoutFrequency,
         muscularLoad,
     };
+};
+
+/** [sets where the muscle is primary, sets where it is only secondary] */
+export type MuscleSetCount = [number, number];
+
+export interface WeeklyMuscleSets {
+    /** Monday 00:00 (local time) of the week, in ms. */
+    weekStart: number;
+    /** Keyed by top-level group (`arms`). */
+    groups: Record<string, MuscleSetCount>;
+    /** Keyed by `group/subMuscle` (`arms/biceps`); `group/group` = tagged at group level only. */
+    muscles: Record<string, MuscleSetCount>;
+}
+
+export const getWeekStart = (date: Date): Date => {
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    return start;
+};
+
+/**
+ * Completed working sets per muscle group and per sub-muscle, for the `weeksCount`
+ * full weeks (Monday to Sunday) before the current one, oldest first. A set counts
+ * once per group/muscle: as primary if any primary muscle belongs to it, else as
+ * secondary.
+ */
+export const fetchWeeklyMuscleSets = async (weeksCount = 6): Promise<WeeklyMuscleSets[]> => {
+    const user = await getCurrentUser();
+    const currentWeekStart = getWeekStart(new Date());
+    const weeks: WeeklyMuscleSets[] = Array.from({ length: weeksCount }, (_, index) => {
+        const start = new Date(currentWeekStart);
+        start.setDate(start.getDate() - 7 * (weeksCount - index));
+        return { weekStart: start.getTime(), groups: {}, muscles: {} };
+    });
+
+    if (!user || weeks.length === 0) return weeks;
+
+    const rows = await db
+        .select({
+            completedAt: workout.completedAt,
+            primaryMuscleGroups: exercise.primaryMuscleGroups,
+            secondaryMuscleGroups: exercise.secondaryMuscleGroups,
+        })
+        .from(workout)
+        .innerJoin(workoutExercise, eq(workoutExercise.workoutId, workout.id))
+        .innerJoin(exercise, eq(workoutExercise.exerciseId, exercise.id))
+        .innerJoin(exerciseSet, eq(exerciseSet.workoutExerciseId, workoutExercise.id))
+        .where(
+            and(
+                eq(workout.userId, user.id),
+                eq(workout.status, 'completed'),
+                isNotNull(workout.completedAt),
+                gte(workout.completedAt, new Date(weeks[0].weekStart)),
+                ne(exerciseSet.type, 'warmup'),
+                isNotNull(exerciseSet.completedAt),
+            ),
+        );
+
+    const add = (target: Record<string, MuscleSetCount>, roles: Map<string, 0 | 1>) => {
+        for (const [key, role] of roles) {
+            const count = target[key] ?? [0, 0];
+            count[role] += 1;
+            target[key] = count;
+        }
+    };
+
+    for (const row of rows) {
+        const completedAt = getDateMs(row.completedAt);
+        if (completedAt == null || completedAt >= currentWeekStart.getTime()) continue;
+        // Weeks are contiguous, so the last one starting before the set is its week.
+        const week = weeks.filter((candidate) => candidate.weekStart <= completedAt).pop();
+        if (!week) continue;
+
+        // 0 = primary, 1 = secondary; primaries are collected first and never overridden.
+        const groupRoles = new Map<string, 0 | 1>();
+        const muscleRoles = new Map<string, 0 | 1>();
+        const collect = (values: string[] | null | undefined, role: 0 | 1) => {
+            for (const value of values ?? []) {
+                const group = getTopLevelMuscleValue(value);
+                const sub = getSecondLevelMuscleValue(value);
+                if (!group || !sub) continue;
+                const muscleKey = `${group}/${sub}`;
+                if (!groupRoles.has(group)) groupRoles.set(group, role);
+                if (!muscleRoles.has(muscleKey)) muscleRoles.set(muscleKey, role);
+            }
+        };
+        collect(row.primaryMuscleGroups, 0);
+        collect(row.secondaryMuscleGroups, 1);
+
+        add(week.groups, groupRoles);
+        add(week.muscles, muscleRoles);
+    }
+
+    return weeks;
 };

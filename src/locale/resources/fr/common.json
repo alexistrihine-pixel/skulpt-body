@@ -388,5 +388,9 @@
             "turnOn": "Activer",
             "delay": "Plus tard"
         }
+    },
+    "calendar": {
+        "previousMonth": "Mois précédent",
+        "nextMonth": "Mois suivant"
     }
 }

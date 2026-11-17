@@ -15,7 +15,7 @@ import { useUser } from '@/hooks/use-user';
 import { ActivitySummary } from './components/activity-summary';
 import { MonthStats } from './components/month';
 import { Scale } from './components/scale';
-import { StrengthStats } from './components/strength';
+import { SetsStats } from './components/sets';
 
 const styles = StyleSheet.create((theme) => ({
     container: {
@@ -135,7 +135,7 @@ const ResultsScreen = () => {
             <Title type="h1">{t('results.title', { ns: 'screens' })}</Title>
             <MonthStats />
             <ActivitySummary onScrubbingChange={setIsChartScrubbing} />
-            <StrengthStats />
+            <SetsStats />
             <Scale />
             <VStack style={styles.fieldContainer}>
                 <Label style={styles.label}>{t('results.stats.title', { ns: 'screens' })}</Label>
