@@ -1,3 +1,11 @@
+> [!NOTE]
+> **Fork non officiel / unofficial fork** de [skulptapp/skulpt](https://github.com/skulptapp/skulpt), modifié pour un usage perso et entre amis (Android, données uniquement sur le téléphone, interface en français, outils de séance façon Hevy).
+> Ce fork n'est ni affilié ni soutenu par l'équipe Skulpt : merci aux auteurs d'origine. Comme l'original, il est distribué sous licence [GPL-3.0](./LICENSE).
+>
+> **Installer :** télécharge le fichier `.apk` de la dernière version dans [Releases](https://github.com/alexistrihine-pixel/skulpt/releases), ouvre-le sur ton téléphone Android et autorise l'installation. Les mises à jour s'installent par-dessus et gardent tes séances.
+>
+> Le README d'origine suit ci-dessous (les liens App Store / Google Play mènent à l'app officielle).
+
 <p align="center">
   <picture>
     <img alt="Skulpt" src="./.github/resources/banner.png" />
