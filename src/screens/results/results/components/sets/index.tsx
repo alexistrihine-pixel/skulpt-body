@@ -66,6 +66,21 @@ const collectOrder = (choices: MuscleChoice[]) =>
     });
 muscles.forEach((group) => collectOrder(group.choices));
 
+/**
+ * Inside the Biceps detail, "Biceps, chef long" reads "Chef long": drops a leading
+ * parent name followed by a comma or a space, and capitalises what is left.
+ */
+const withoutParentName = (name: string, parentName: string | null): string => {
+    if (!parentName) return name;
+    const match = new RegExp(
+        `^${parentName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[,\\s]+`,
+        'i',
+    ).exec(name);
+    if (!match || match[0].length >= name.length) return name;
+    const rest = name.slice(match[0].length);
+    return rest.charAt(0).toLocaleUpperCase() + rest.slice(1);
+};
+
 type Mode = 'lastWeek' | 'average';
 /** `drillable`: `false` = not tappable, `true` = tappable and marked ›, unset = tappable. */
 type ChartItem = { key: string; name: string; value: number; drillable?: boolean };
@@ -524,7 +539,10 @@ const SetsStats = () => {
             name:
                 key === self
                     ? t('results.sets.unspecified', { ns: 'screens' })
-                    : t(`muscleGroup.${key}`, { ns: 'common' }),
+                    : withoutParentName(
+                          t(`muscleGroup.${key}`, { ns: 'common' }),
+                          selectedSub ? t(`muscleGroup.${selectedSub}`, { ns: 'common' }) : null,
+                      ),
             value: sumFor(weeks, (week) => week.muscles[`${prefix}/${key}`]),
             drillable: selectedSub
                 ? false
