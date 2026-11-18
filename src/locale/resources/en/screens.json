@@ -64,7 +64,13 @@
                 "empty": "No weight logs yet",
                 "bodyFatPercentageEmpty": "No body fat logs yet",
                 "rangeLabel": "Period",
-                "ranges": { "1m": "1M", "3m": "3M", "6m": "6M", "1y": "1Y", "all": "All" },
+                "ranges": {
+                    "1m": "1M",
+                    "3m": "3M",
+                    "6m": "6M",
+                    "1y": "1Y",
+                    "all": "All"
+                },
                 "rangesLong": {
                     "1m": "1 month",
                     "3m": "3 months",
@@ -77,7 +83,12 @@
                 "periodOne": "on {{date}}",
                 "trend": "trend {{value}}",
                 "pointLabel": "{{date}}: {{value}}. Drag to read other entries",
-                "stats": { "min": "Min", "max": "Max", "average": "Average", "count": "Entries" },
+                "stats": {
+                    "min": "Min",
+                    "max": "Max",
+                    "average": "Average",
+                    "count": "Entries"
+                },
                 "legend": "Line: trend (7-day average). Dots: each entry.",
                 "legendGaps": "Dashed: long stretches without entries, shortened."
             },
@@ -499,6 +510,30 @@
                     "title": "Send Feedback"
                 }
             }
+        },
+        "data": {
+            "title": "Data",
+            "items": {
+                "importHevy": {
+                    "title": "Import from Hevy (CSV)",
+                    "pickTitle": "Pick the CSV file exported from Hevy",
+                    "doneTitle": "Import complete",
+                    "doneDescription": "{{workouts}} workout(s) and {{sets}} set(s) imported.\n{{skipped}} workout(s) already present were skipped.\n{{created}} exercise(s) created, {{reused}} reused.",
+                    "noneTitle": "Nothing to import",
+                    "noneDescription": "Every workout in this file is already in the app ({{skipped}}).",
+                    "errorTitle": "Import failed",
+                    "errorDescription": "This file does not look like a Hevy CSV export. In Hevy: Profile › Settings › Export & Import Data › Export Workouts."
+                },
+                "export": {
+                    "title": "Export my workouts (CSV)",
+                    "shareTitle": "Export my workouts",
+                    "emptyTitle": "Nothing to export",
+                    "emptyDescription": "No completed workout yet.",
+                    "errorTitle": "Export failed",
+                    "errorDescription": "The file could not be created."
+                }
+            },
+            "busy": "Working…"
         },
         "supportSkulpt": {
             "title": "Support Skulpt",

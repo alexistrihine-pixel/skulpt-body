@@ -6,6 +6,9 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
 import * as MailComposer from 'expo-mail-composer';
+import * as Sharing from 'expo-sharing';
+import { File, Paths } from 'expo-file-system';
+import { useQueryClient } from '@tanstack/react-query';
 import {
     Globe,
     ChevronRight,
@@ -15,7 +18,8 @@ import {
     Volume2,
     Clock,
     Languages,
-    Heart,
+    Download,
+    Upload,
     Megaphone,
     Mail,
     MessageCircle,
@@ -37,6 +41,7 @@ import { useRunningWorkoutStatic } from '@/hooks/use-running-workout';
 import { reportError } from '@/services/error-reporting';
 import { requestStoreReviewIfAvailable } from '@/services/store-review';
 import { useAnalytics } from '@/hooks/use-analytics';
+import { exportWorkoutsCsv, importHevyCsv } from '@/crud/hevy';
 
 const styles = StyleSheet.create((theme, rt) => ({
     container: {
@@ -119,6 +124,8 @@ const SettingsScreen = () => {
     const { track } = useAnalytics();
 
     const [isMailAvailable, setIsMailAvailable] = useState(false);
+    const [busy, setBusy] = useState<'import' | 'export' | null>(null);
+    const queryClient = useQueryClient();
 
     useEffect(() => {
         MailComposer.isAvailableAsync()
@@ -238,10 +245,96 @@ const SettingsScreen = () => {
             title: t('settings.items.language.title', { ns: 'screens' }),
             onPress: () => router.navigate('/settings/language'),
         },
+    ];
+
+    const handleImportHevy = async () => {
+        if (busy) return;
+        try {
+            const picked = await File.pickFileAsync({
+                mimeTypes: ['text/csv', 'text/comma-separated-values', 'text/plain', '*/*'],
+            });
+            if (picked.canceled) return;
+            setBusy('import');
+            const text = await picked.result.text();
+            const report = await importHevyCsv(text);
+            queryClient.invalidateQueries();
+            if (report.workouts === 0) {
+                appAlert(
+                    t('settings.data.items.importHevy.noneTitle', { ns: 'screens' }),
+                    t('settings.data.items.importHevy.noneDescription', {
+                        ns: 'screens',
+                        skipped: report.skipped,
+                    }),
+                );
+            } else {
+                appAlert(
+                    t('settings.data.items.importHevy.doneTitle', { ns: 'screens' }),
+                    t('settings.data.items.importHevy.doneDescription', {
+                        ns: 'screens',
+                        workouts: report.workouts,
+                        sets: report.sets,
+                        skipped: report.skipped,
+                        created: report.exercisesCreated,
+                        reused: report.exercisesReused,
+                    }),
+                );
+            }
+        } catch (error) {
+            reportError(error, 'Failed to import Hevy CSV:');
+            appAlert(
+                t('settings.data.items.importHevy.errorTitle', { ns: 'screens' }),
+                t('settings.data.items.importHevy.errorDescription', { ns: 'screens' }),
+            );
+        } finally {
+            setBusy(null);
+        }
+    };
+
+    const handleExport = async () => {
+        if (busy) return;
+        setBusy('export');
+        try {
+            const { csv, workouts } = await exportWorkoutsCsv();
+            if (workouts === 0) {
+                appAlert(
+                    t('settings.data.items.export.emptyTitle', { ns: 'screens' }),
+                    t('settings.data.items.export.emptyDescription', { ns: 'screens' }),
+                );
+                return;
+            }
+            const today = new Date();
+            const stamp = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            const file = new File(Paths.cache, `skulpt_seances_${stamp}.csv`);
+            if (file.exists) file.delete();
+            file.create();
+            file.write(csv);
+            await Sharing.shareAsync(file.uri, {
+                mimeType: 'text/csv',
+                dialogTitle: t('settings.data.items.export.shareTitle', { ns: 'screens' }),
+            });
+        } catch (error) {
+            reportError(error, 'Failed to export workouts CSV:');
+            appAlert(
+                t('settings.data.items.export.errorTitle', { ns: 'screens' }),
+                t('settings.data.items.export.errorDescription', { ns: 'screens' }),
+            );
+        } finally {
+            setBusy(null);
+        }
+    };
+
+    const data = [
         {
-            icon: Heart,
-            title: t('settings.items.heartRate.title', { ns: 'screens' }),
-            onPress: () => router.navigate('/settings/heartrate' as any),
+            key: 'import',
+            icon: Download,
+            title: t('settings.data.items.importHevy.title', { ns: 'screens' }),
+            onPress: handleImportHevy,
+        },
+        {
+            key: 'export',
+            icon: Upload,
+            title: t('settings.data.items.export.title', { ns: 'screens' }),
+            onPress: handleExport,
         },
     ];
 
@@ -330,6 +423,47 @@ const SettingsScreen = () => {
                             {index < settings.length - 1 && <Box style={styles.divider} />}
                         </VStack>
                     ))}
+                </VStack>
+            </VStack>
+            <VStack style={styles.fieldContainer}>
+                <Label>{t('settings.data.title', { ns: 'screens' })}</Label>
+                <VStack style={styles.settingsContainer}>
+                    <VStack style={styles.settingsWrapper}>
+                        {data.map((setting, index) => (
+                            <VStack key={setting.key}>
+                                <Pressable onPress={setting.onPress} disabled={busy !== null}>
+                                    <HStack style={styles.settingContainer}>
+                                        <Box style={styles.iconContainer}>
+                                            <setting.icon
+                                                size={theme.space(5)}
+                                                strokeWidth={theme.space(0.375)}
+                                                opacity={0.8}
+                                                color={theme.colors.typography}
+                                            />
+                                        </Box>
+                                        <HStack style={styles.settingContentContainer}>
+                                            <VStack style={styles.settingTitleContainer}>
+                                                <Box>
+                                                    <Text
+                                                        fontWeight="medium"
+                                                        style={styles.settingTitle}
+                                                    >
+                                                        {setting.title}
+                                                    </Text>
+                                                </Box>
+                                            </VStack>
+                                            {busy === setting.key && (
+                                                <Text style={styles.versionText}>
+                                                    {t('settings.data.busy', { ns: 'screens' })}
+                                                </Text>
+                                            )}
+                                        </HStack>
+                                    </HStack>
+                                </Pressable>
+                                {index < data.length - 1 && <Box style={styles.divider} />}
+                            </VStack>
+                        ))}
+                    </VStack>
                 </VStack>
             </VStack>
             {Platform.OS === 'ios' && (

@@ -77,12 +77,6 @@ export default function SettingsLayout() {
                     headerTitle: t('settings.items.language.title', { ns: 'screens' }),
                 }}
             />
-            <Stack.Screen
-                name="heartrate"
-                options={{
-                    headerTitle: t('settings.items.heartRate.title', { ns: 'screens' }),
-                }}
-            />
         </Stack>
     );
 }

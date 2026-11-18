@@ -64,7 +64,13 @@
                 "empty": "Aucune pesée pour l'instant",
                 "bodyFatPercentageEmpty": "Aucune mesure de masse grasse pour l'instant",
                 "rangeLabel": "Période",
-                "ranges": { "1m": "1M", "3m": "3M", "6m": "6M", "1y": "1A", "all": "Tout" },
+                "ranges": {
+                    "1m": "1M",
+                    "3m": "3M",
+                    "6m": "6M",
+                    "1y": "1A",
+                    "all": "Tout"
+                },
                 "rangesLong": {
                     "1m": "1 mois",
                     "3m": "3 mois",
@@ -77,7 +83,12 @@
                 "periodOne": "le {{date}}",
                 "trend": "tendance {{value}}",
                 "pointLabel": "{{date}} : {{value}}. Glisse pour lire les autres mesures",
-                "stats": { "min": "Min", "max": "Max", "average": "Moyenne", "count": "Mesures" },
+                "stats": {
+                    "min": "Min",
+                    "max": "Max",
+                    "average": "Moyenne",
+                    "count": "Mesures"
+                },
                 "legend": "Ligne : tendance (moyenne sur 7 jours). Points : chaque mesure.",
                 "legendGaps": "Pointillés : longues périodes sans mesure, raccourcies."
             },
@@ -499,6 +510,30 @@
                     "title": "Envoyer un avis"
                 }
             }
+        },
+        "data": {
+            "title": "Données",
+            "items": {
+                "importHevy": {
+                    "title": "Importer depuis Hevy (CSV)",
+                    "pickTitle": "Choisis le fichier CSV exporté depuis Hevy",
+                    "doneTitle": "Import terminé",
+                    "doneDescription": "{{workouts}} séance(s) et {{sets}} série(s) importées.\n{{skipped}} séance(s) déjà présentes ignorées.\n{{created}} exercice(s) créé(s), {{reused}} réutilisé(s).",
+                    "noneTitle": "Rien à importer",
+                    "noneDescription": "Toutes les séances de ce fichier sont déjà dans l'appli ({{skipped}}).",
+                    "errorTitle": "Import impossible",
+                    "errorDescription": "Ce fichier ne ressemble pas à un export CSV de Hevy. Dans Hevy : Profil › Réglages › Export & Import Data › Export Workouts."
+                },
+                "export": {
+                    "title": "Exporter mes séances (CSV)",
+                    "shareTitle": "Exporter mes séances",
+                    "emptyTitle": "Rien à exporter",
+                    "emptyDescription": "Aucune séance terminée pour l'instant.",
+                    "errorTitle": "Export impossible",
+                    "errorDescription": "Le fichier n'a pas pu être créé."
+                }
+            },
+            "busy": "En cours…"
         },
         "supportSkulpt": {
             "title": "Soutenir Skulpt",
