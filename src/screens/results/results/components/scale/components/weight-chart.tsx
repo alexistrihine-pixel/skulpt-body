@@ -268,6 +268,12 @@ const WeightChart = ({
         [model],
     );
 
+    /** Lifting the finger (or the list taking over to scroll) hides the bubble. */
+    const releasePick = useCallback(() => {
+        setSelected(null);
+        lastHapticIndex.current = null;
+    }, []);
+
     if (timeline.length === 0) {
         return (
             <Box style={styles.empty}>
@@ -277,10 +283,12 @@ const WeightChart = ({
     }
 
     const points = model?.points ?? [];
-    const selectedIndex = points.length
-        ? Math.min(selected ?? points.length - 1, points.length - 1)
-        : -1;
-    const point = selectedIndex >= 0 ? points[selectedIndex] : null;
+    const lastPoint = points.length > 0 ? points[points.length - 1] : null;
+    /** Only while the finger is on the chart. */
+    const point =
+        selected != null && points.length > 0
+            ? points[Math.min(selected, points.length - 1)]
+            : null;
     const formatNumber = (value: number) =>
         model && model.step < 1
             ? numberFormatter.format(value)
@@ -338,7 +346,7 @@ const WeightChart = ({
                 })}
             </HStack>
 
-            {model && paths && point ? (
+            {model && paths && lastPoint ? (
                 <>
                     <HStack style={styles.summary}>
                         <Text style={styles.change}>{changeText}</Text>
@@ -405,27 +413,31 @@ const WeightChart = ({
                                 strokeLinejoin="round"
                                 fill="none"
                             />
-                            <Path
-                                d={`M${point.x.toFixed(1)},0 V${CHART_HEIGHT}`}
-                                stroke={theme.colors.accent}
-                                strokeOpacity={0.4}
-                                strokeWidth={2}
-                            />
-                            <Circle
-                                cx={point.x}
-                                cy={point.yTrend}
-                                r={9}
-                                fill={theme.colors.accent}
-                                fillOpacity={0.25}
-                            />
-                            <Circle
-                                cx={point.x}
-                                cy={point.yTrend}
-                                r={5}
-                                fill={theme.colors.accent}
-                                stroke={theme.colors.foreground}
-                                strokeWidth={2}
-                            />
+                            {point && (
+                                <>
+                                    <Path
+                                        d={`M${point.x.toFixed(1)},0 V${CHART_HEIGHT}`}
+                                        stroke={theme.colors.accent}
+                                        strokeOpacity={0.4}
+                                        strokeWidth={2}
+                                    />
+                                    <Circle
+                                        cx={point.x}
+                                        cy={point.yTrend}
+                                        r={9}
+                                        fill={theme.colors.accent}
+                                        fillOpacity={0.25}
+                                    />
+                                    <Circle
+                                        cx={point.x}
+                                        cy={point.yTrend}
+                                        r={5}
+                                        fill={theme.colors.accent}
+                                        stroke={theme.colors.foreground}
+                                        strokeWidth={2}
+                                    />
+                                </>
+                            )}
                         </Svg>
                         {model.ticks.map((tick) => (
                             <Text
@@ -436,42 +448,46 @@ const WeightChart = ({
                                 {formatNumber(tick.value)}
                             </Text>
                         ))}
-                        <View
-                            pointerEvents="none"
-                            style={[
-                                styles.tooltip,
-                                {
-                                    left: Math.max(
-                                        0,
-                                        Math.min(
-                                            plotWidth - TOOLTIP_WIDTH,
-                                            point.x - TOOLTIP_WIDTH / 2,
+                        {point && (
+                            <View
+                                pointerEvents="none"
+                                style={[
+                                    styles.tooltip,
+                                    {
+                                        left: Math.max(
+                                            0,
+                                            Math.min(
+                                                plotWidth - TOOLTIP_WIDTH,
+                                                point.x - TOOLTIP_WIDTH / 2,
+                                            ),
                                         ),
-                                    ),
-                                },
-                            ]}
-                        >
-                            <Text style={styles.tooltipValue}>{formatValue(point.value)}</Text>
-                            <Text style={styles.tooltipMeta}>{formatDate(point.time)}</Text>
-                            <Text style={styles.tooltipTrend}>
-                                {t('results.scale.chart.trend', {
-                                    ns: 'screens',
-                                    value: numberFormatter.format(point.trend),
-                                })}
-                            </Text>
-                        </View>
+                                    },
+                                ]}
+                            >
+                                <Text style={styles.tooltipValue}>{formatValue(point.value)}</Text>
+                                <Text style={styles.tooltipMeta}>{formatDate(point.time)}</Text>
+                                <Text style={styles.tooltipTrend}>
+                                    {t('results.scale.chart.trend', {
+                                        ns: 'screens',
+                                        value: numberFormatter.format(point.trend),
+                                    })}
+                                </Text>
+                            </View>
+                        )}
                         <View
                             style={[styles.touchLayer, { width: plotWidth }]}
                             accessible
                             accessibilityLabel={t('results.scale.chart.pointLabel', {
                                 ns: 'screens',
-                                date: formatDate(point.time),
-                                value: formatValue(point.value),
+                                date: formatDate(lastPoint.time),
+                                value: formatValue(lastPoint.value),
                             })}
                             onStartShouldSetResponder={() => true}
                             onMoveShouldSetResponder={() => true}
                             onResponderGrant={pickAt}
                             onResponderMove={pickAt}
+                            onResponderRelease={releasePick}
+                            onResponderTerminate={releasePick}
                             onResponderTerminationRequest={() => true}
                         />
                     </View>
