@@ -36,6 +36,8 @@
 
 Le détail de chaque version est dans les [Releases](https://github.com/alexistrihine-pixel/skulpt-body/releases).
 
+**Tu viens de Hevy ?** Tu peux garder tout ton historique. Dans Hevy, exporte tes séances (Profil › Réglages › Export & Import Data › Export Workouts), puis dans Skulpt Body touche Réglages › Données › **Importer depuis Hevy (CSV)** et choisis le fichier.
+
 ## Fonctionnalités
 
 ### Accueil
@@ -101,6 +103,7 @@ Le détail de chaque version est dans les [Releases](https://github.com/alexistr
 
 - **Couleurs** : violet par défaut, 5 autres palettes sombres ou la tienne (Réglages › Thème).
 - Thème clair, sombre ou celui du système ; unités kg/lb ; langue ; sons et vibrations.
+- **Données** : import de l'historique depuis un export CSV de Hevy (séances, séries, notes d'exercice ; les séances déjà présentes sont ignorées) et export de toutes tes séances en CSV, au même format, pour les sauvegarder ou les envoyer.
 - Tout en français. Les données sont stockées sur le téléphone : pas de compte, pas de synchronisation, pas de pub.
 
 ## Crédits et licence
