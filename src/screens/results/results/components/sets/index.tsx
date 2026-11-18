@@ -4,6 +4,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useTranslation } from 'react-i18next';
 import Svg, { Path } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 
 import { VStack } from '@/components/primitives/vstack';
 import { HStack } from '@/components/primitives/hstack';
@@ -12,6 +13,7 @@ import { Text } from '@/components/primitives/text';
 import { Pressable } from '@/components/primitives/pressable';
 import { useWeeklyMuscleSets } from '@/hooks/use-workouts';
 import { type MuscleSetCount, type WeeklyMuscleSets } from '@/crud/workout';
+import { muscles, type MuscleChoice } from '@/constants/muscles';
 
 const WEEKS = 6;
 /** Secondary muscles count as half a set. */
@@ -55,8 +57,18 @@ const SUB_ORDER: Record<string, string[]> = {
     neck: ['sternocleidomastoid', 'scalenes', 'splenius_capitis', 'neck'],
 };
 
+/** Every muscle value in anatomy order, for the third level. */
+const MUSCLE_ORDER: string[] = [];
+const collectOrder = (choices: MuscleChoice[]) =>
+    choices.forEach((choice) => {
+        MUSCLE_ORDER.push(choice.value);
+        if (choice.choices) collectOrder(choice.choices);
+    });
+muscles.forEach((group) => collectOrder(group.choices));
+
 type Mode = 'lastWeek' | 'average';
-type ChartItem = { key: string; name: string; value: number };
+/** `drillable`: `false` = not tappable, `true` = tappable and marked ›, unset = tappable. */
+type ChartItem = { key: string; name: string; value: number; drillable?: boolean };
 
 const styles = StyleSheet.create((theme) => ({
     section: {
@@ -147,6 +159,36 @@ const styles = StyleSheet.create((theme) => ({
             : theme.fontWeight.medium.fontWeight,
         color: theme.colors.typography,
     }),
+    drillMark: {
+        fontWeight: theme.fontWeight.bold.fontWeight,
+        color: theme.colors.accent,
+    },
+    detailHeader: {
+        paddingLeft: theme.space(1),
+        paddingRight: theme.space(1),
+        alignItems: 'center',
+    },
+    crumbs: {
+        flex: 1,
+        minWidth: 0,
+        alignItems: 'center',
+        gap: theme.space(1),
+        paddingLeft: theme.space(3),
+    },
+    crumbsWithBack: {
+        paddingLeft: 0,
+    },
+    crumbParent: {
+        ...theme.fontSize.lg,
+        fontWeight: theme.fontWeight.bold.fontWeight,
+        color: theme.colors.neutral[400],
+        flexShrink: 1,
+    },
+    detailHint: {
+        ...theme.fontSize.xs,
+        color: theme.colors.neutral[400],
+        paddingHorizontal: theme.space(4),
+    },
     legend: {
         paddingHorizontal: theme.space(4),
         justifyContent: 'center',
@@ -294,6 +336,7 @@ const RingChart: FC<{
                 return {
                     key: `${item.key}-${level}`,
                     itemKey: item.key,
+                    selectable: item.drillable !== false,
                     d,
                     fill: level < lv ? ramp[level] : emptyColor,
                 };
@@ -310,7 +353,9 @@ const RingChart: FC<{
                         d={cell.d}
                         fill={cell.fill}
                         fillRule="evenodd"
-                        onPress={onSelect ? () => onSelect(cell.itemKey) : undefined}
+                        onPress={
+                            onSelect && cell.selectable ? () => onSelect(cell.itemKey) : undefined
+                        }
                     />
                 ))}
             </Svg>
@@ -332,6 +377,7 @@ const RingChart: FC<{
                             style={styles.labelName(selected)}
                         >
                             {item.name}
+                            {item.drillable && <Text style={styles.drillMark}> ›</Text>}
                         </Text>
                     </>
                 );
@@ -340,7 +386,7 @@ const RingChart: FC<{
                     top: y,
                     transform: [{ translateX: '-50%' as const }, { translateY: '-50%' as const }],
                 };
-                return onSelect ? (
+                return onSelect && item.drillable !== false ? (
                     <Pressable
                         key={item.key}
                         onPress={() => onSelect(item.key)}
@@ -408,6 +454,7 @@ const SetsStats = () => {
     const { data: weeks } = useWeeklyMuscleSets(WEEKS);
     const [mode, setMode] = useState<Mode>('lastWeek');
     const [selected, setSelected] = useState<string | null>(null);
+    const [selectedSub, setSelectedSub] = useState<string | null>(null);
     const [width, setWidth] = useState(0);
 
     const onLayout = useCallback((e: LayoutChangeEvent) => {
@@ -443,36 +490,68 @@ const SetsStats = () => {
         }));
     }, [weeks, sumFor, t]);
 
+    /** Muscles right under `prefix` (`arms` or `arms/biceps`) that have sets, in anatomy order. */
+    const childKeys = useCallback(
+        (prefix: string) => {
+            const depth = prefix.split('/').length + 1;
+            const keys = new Set<string>();
+            (weeks ?? []).forEach((week) =>
+                Object.keys(week.muscles).forEach((key) => {
+                    const parts = key.split('/');
+                    if (parts.length === depth && key.startsWith(`${prefix}/`)) {
+                        keys.add(parts[depth - 1]);
+                    }
+                }),
+            );
+            const self = prefix.split('/').pop()!;
+            const order = SUB_ORDER[prefix] ?? MUSCLE_ORDER;
+            const rank = (key: string) => {
+                if (key === self) return Number.MAX_SAFE_INTEGER;
+                const index = order.indexOf(key);
+                return index < 0 ? Number.MAX_SAFE_INTEGER - 1 : index;
+            };
+            return Array.from(keys).sort((a, b) => rank(a) - rank(b));
+        },
+        [weeks],
+    );
+
     const subItems = useMemo<ChartItem[]>(() => {
         if (!selected) return [];
-        const keys = new Set<string>();
-        (weeks ?? []).forEach((week) =>
-            Object.keys(week.muscles).forEach((key) => {
-                if (key.startsWith(`${selected}/`)) keys.add(key.slice(selected.length + 1));
-            }),
-        );
-        const order = SUB_ORDER[selected] ?? [];
-        return Array.from(keys)
-            .sort((a, b) => {
-                const ia = order.indexOf(a);
-                const ib = order.indexOf(b);
-                return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
-            })
-            .map((sub) => ({
-                key: sub,
-                name:
-                    sub === selected
-                        ? t('results.sets.unspecified', { ns: 'screens' })
-                        : t(`muscleGroup.${sub}`, { ns: 'common' }),
-                value: sumFor(weeks, (week) => week.muscles[`${selected}/${sub}`]),
-            }));
-    }, [selected, weeks, sumFor, t]);
+        const prefix = selectedSub ? `${selected}/${selectedSub}` : selected;
+        const self = prefix.split('/').pop();
+        return childKeys(prefix).map((key) => ({
+            key,
+            name:
+                key === self
+                    ? t('results.sets.unspecified', { ns: 'screens' })
+                    : t(`muscleGroup.${key}`, { ns: 'common' }),
+            value: sumFor(weeks, (week) => week.muscles[`${prefix}/${key}`]),
+            drillable: selectedSub
+                ? false
+                : key !== self && childKeys(`${prefix}/${key}`).length > 0,
+        }));
+    }, [selected, selectedSub, weeks, sumFor, childKeys, t]);
 
     const selectedGroup = groupItems.find((item) => item.key === selected);
+    const detailValue = selectedSub
+        ? sumFor(weeks, (week) => week.muscles[`${selected}/${selectedSub}`])
+        : (selectedGroup?.value ?? 0);
+    const selectedSubName = selectedSub ? t(`muscleGroup.${selectedSub}`, { ns: 'common' }) : '';
 
     const onSelect = useCallback((key: string) => {
         Haptics.selectionAsync().catch(() => undefined);
         setSelected((current) => (current === key ? null : key));
+        setSelectedSub(null);
+    }, []);
+
+    const onSelectSub = useCallback((key: string) => {
+        Haptics.selectionAsync().catch(() => undefined);
+        setSelectedSub(key);
+    }, []);
+
+    const closeDetail = useCallback(() => {
+        setSelected(null);
+        setSelectedSub(null);
     }, []);
 
     const modes: { key: Mode; label: string }[] = [
@@ -531,20 +610,50 @@ const SetsStats = () => {
 
             {selectedGroup && (
                 <VStack style={styles.card(true)}>
-                    <HStack style={styles.cardHeader}>
-                        <Text style={styles.cardTitle}>
-                            {t('results.sets.detail', { ns: 'screens', group: selectedGroup.name })}
-                        </Text>
+                    <HStack style={styles.detailHeader}>
+                        {selectedSub && (
+                            <Pressable
+                                style={styles.closeButton}
+                                onPress={() => setSelectedSub(null)}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('results.sets.back', {
+                                    ns: 'screens',
+                                    group: selectedGroup.name,
+                                })}
+                            >
+                                <ChevronLeft size={22} color={theme.colors.typography} />
+                            </Pressable>
+                        )}
+                        <HStack style={[styles.crumbs, selectedSub ? styles.crumbsWithBack : null]}>
+                            {selectedSub ? (
+                                <>
+                                    <Text style={styles.crumbParent} numberOfLines={1}>
+                                        {selectedGroup.name}
+                                    </Text>
+                                    <ChevronRight size={16} color={theme.colors.neutral[400]} />
+                                    <Text style={styles.cardTitle} numberOfLines={1}>
+                                        {selectedSubName}
+                                    </Text>
+                                </>
+                            ) : (
+                                <Text style={styles.cardTitle} numberOfLines={1}>
+                                    {t('results.sets.detail', {
+                                        ns: 'screens',
+                                        group: selectedGroup.name,
+                                    })}
+                                </Text>
+                            )}
+                        </HStack>
                         <Text style={styles.total}>
                             {t('results.sets.total', {
                                 ns: 'screens',
-                                count: selectedGroup.value,
-                                value: formatValue(selectedGroup.value),
+                                count: detailValue,
+                                value: formatValue(detailValue),
                             })}
                         </Text>
                         <Pressable
                             style={styles.closeButton}
-                            onPress={() => setSelected(null)}
+                            onPress={closeDetail}
                             accessibilityRole="button"
                             accessibilityLabel={t('results.sets.close', { ns: 'screens' })}
                         >
@@ -552,11 +661,33 @@ const SetsStats = () => {
                         </Pressable>
                     </HStack>
                     {width > 0 && subItems.length > 0 && (
-                        <RingChart width={width} items={subItems} formatValue={formatValue} />
+                        <RingChart
+                            width={width}
+                            items={subItems}
+                            onSelect={selectedSub ? undefined : onSelectSub}
+                            formatValue={formatValue}
+                            ariaLabel={(item, value) =>
+                                t('results.sets.showHeads', {
+                                    ns: 'screens',
+                                    muscle: item.name,
+                                    value,
+                                })
+                            }
+                        />
                     )}
                     {subItems.length === 0 && (
                         <Text style={[styles.hint, { paddingHorizontal: theme.space(4) }]}>
                             {t('results.sets.empty', { ns: 'screens' })}
+                        </Text>
+                    )}
+                    {subItems.length > 0 && (selectedSub || subItems.some((i) => i.drillable)) && (
+                        <Text style={styles.detailHint}>
+                            {selectedSub
+                                ? t('results.sets.headsHint', {
+                                      ns: 'screens',
+                                      muscle: selectedSubName,
+                                  })
+                                : t('results.sets.subHint', { ns: 'screens' })}
                         </Text>
                     )}
                 </VStack>

@@ -24,7 +24,7 @@ import { reportError } from '@/services/error-reporting';
 import { computeWorkoutStats } from '@/services/workout-health-stats';
 import { HealthStats } from '@/types/health-stats';
 import {
-    getSecondLevelMuscleValue,
+    getMuscleLevelKeys,
     getTopLevelMuscleValue,
     getTopLevelMuscleValues,
 } from '@/constants/muscles';
@@ -2060,7 +2060,11 @@ export interface WeeklyMuscleSets {
     weekStart: number;
     /** Keyed by top-level group (`arms`). */
     groups: Record<string, MuscleSetCount>;
-    /** Keyed by `group/subMuscle` (`arms/biceps`); `group/group` = tagged at group level only. */
+    /**
+     * Keyed by `group/subMuscle` (`arms/biceps`) and `group/subMuscle/head`
+     * (`arms/biceps/biceps_long_head`); a repeated last part (`group/group`,
+     * `arms/biceps/biceps`) = tagged at the level above only.
+     */
     muscles: Record<string, MuscleSetCount>;
 }
 
@@ -2129,12 +2133,12 @@ export const fetchWeeklyMuscleSets = async (weeksCount = 6): Promise<WeeklyMuscl
         const muscleRoles = new Map<string, 0 | 1>();
         const collect = (values: string[] | null | undefined, role: 0 | 1) => {
             for (const value of values ?? []) {
-                const group = getTopLevelMuscleValue(value);
-                const sub = getSecondLevelMuscleValue(value);
-                if (!group || !sub) continue;
-                const muscleKey = `${group}/${sub}`;
+                const [group, ...muscleKeys] = getMuscleLevelKeys(value);
+                if (!group) continue;
                 if (!groupRoles.has(group)) groupRoles.set(group, role);
-                if (!muscleRoles.has(muscleKey)) muscleRoles.set(muscleKey, role);
+                for (const muscleKey of muscleKeys) {
+                    if (!muscleRoles.has(muscleKey)) muscleRoles.set(muscleKey, role);
+                }
             }
         };
         collect(row.primaryMuscleGroups, 0);

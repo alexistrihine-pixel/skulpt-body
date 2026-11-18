@@ -178,6 +178,7 @@ const Scale = () => {
                     numberFormatter={numberFormatter}
                     formatValue={formatWeightValue}
                     emptyText={t('results.scale.chart.empty', { ns: 'screens' })}
+                    rangeStorageKey="results.weightRange"
                 />
             </VStack>
             {bodyFatTimelineWithDisplayValues.length > 0 && (
@@ -199,6 +200,7 @@ const Scale = () => {
                         emptyText={t('results.scale.chart.bodyFatPercentageEmpty', {
                             ns: 'screens',
                         })}
+                        rangeStorageKey="results.bodyFatRange"
                     />
                 </VStack>
             )}

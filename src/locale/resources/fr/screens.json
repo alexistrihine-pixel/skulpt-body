@@ -62,7 +62,24 @@
             },
             "chart": {
                 "empty": "Aucune pesée pour l'instant",
-                "bodyFatPercentageEmpty": "Aucune mesure de masse grasse pour l'instant"
+                "bodyFatPercentageEmpty": "Aucune mesure de masse grasse pour l'instant",
+                "rangeLabel": "Période",
+                "ranges": { "1m": "1M", "3m": "3M", "6m": "6M", "1y": "1A", "all": "Tout" },
+                "rangesLong": {
+                    "1m": "1 mois",
+                    "3m": "3 mois",
+                    "6m": "6 mois",
+                    "1y": "1 an",
+                    "all": "Tout"
+                },
+                "rangeEmpty": "Aucune pesée sur cette période",
+                "period": "du {{from}} au {{to}}",
+                "periodOne": "le {{date}}",
+                "trend": "tendance {{value}}",
+                "pointLabel": "{{date}} : {{value}}. Glisse pour lire les autres mesures",
+                "stats": { "min": "Min", "max": "Max", "average": "Moyenne", "count": "Mesures" },
+                "legend": "Ligne : tendance (moyenne sur 7 jours). Points : chaque mesure.",
+                "legendGaps": "Pointillés : longues périodes sans mesure, raccourcies."
             },
             "modal": {
                 "date": "Date",
@@ -110,7 +127,11 @@
             "footnote": "Un anneau = 5 séries, 4 anneaux pleins = 16 séries ou plus. Un muscle secondaire compte pour une demi-série.",
             "close": "Fermer le détail",
             "showDetail": "{{group}} : {{value}} séries. Afficher le détail",
-            "empty": "Aucune série terminée sur cette période."
+            "empty": "Aucune série terminée sur cette période.",
+            "subHint": "Touche un muscle marqué › pour voir le détail de ses chefs ou faisceaux.",
+            "headsHint": "Une série compte pour chaque chef qu’elle travaille : le total « {{muscle}} » n’est donc pas la somme des chefs.",
+            "back": "Retour à {{group}}",
+            "showHeads": "{{muscle}} : {{value}} séries. Afficher les chefs"
         }
     },
     "exercises": {

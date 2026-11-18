@@ -1,672 +1,516 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import * as Haptics from 'expo-haptics';
-import { LineChart, yAxisSides } from 'react-native-gifted-charts';
-import PagerView, { type PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
-import { type GestureResponderEvent, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { type GestureResponderEvent, type LayoutChangeEvent, View } from 'react-native';
+import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Box } from '@/components/primitives/box';
 import { HStack } from '@/components/primitives/hstack';
+import { Pressable } from '@/components/primitives/pressable';
 import { Text } from '@/components/primitives/text';
 import { VStack } from '@/components/primitives/vstack';
-import { buildPageXAxisTicks } from '../utils';
-import { type MeasurementWithDisplayValue, type WeightChartPage } from '../types';
+import { storage } from '@/storage';
+import { type MeasurementWithDisplayValue } from '../types';
+import {
+    buildChartModel,
+    type ChartRange,
+    chartRanges,
+    isChartRange,
+    smoothPath,
+    splitAtGaps,
+} from '../utils';
 
-const CHART_HEIGHT = 172;
-const CHART_SECTIONS = 3;
-const Y_AXIS_LABEL_AREA = 40;
-const WEIGHT_POINTS_PER_PAGE = 15;
-const PAGE_OVERLAP_POINTS = 1;
-const PAGE_PRERENDER_RADIUS = 1;
-const CHART_POINTER_LABEL_WIDTH = 88;
-const SCRUB_ACTIVATION_DELAY_MS = 180;
-const SCRUB_CANCEL_DISTANCE = 8;
-const CHART_LINE_OPACITY = 0.2;
-const CHART_GUIDE_OPACITY = 0.35;
-const CHART_GUIDE_WIDTH = 2;
-const CHART_GUIDE_DOT_SIZE = 8;
-const CHART_EDGE_INSET = CHART_GUIDE_DOT_SIZE / 2;
+const CHART_HEIGHT = 176;
+const Y_AXIS_WIDTH = 36;
+const TOOLTIP_WIDTH = 104;
+const LINE_WIDTH = 3;
 
 const styles = StyleSheet.create((theme) => ({
-    chartWrap: {
+    wrap: {
         width: '100%',
-        justifyContent: 'center',
+        gap: theme.space(4),
     },
-    chartFrame: {
+    segmented: {
+        padding: theme.space(1),
+        gap: theme.space(1),
+        backgroundColor: theme.colors.fieldBackground,
+        borderRadius: theme.radius['2xl'],
+    },
+    segment: {
+        flex: 1,
+    },
+    segmentInner: (active: boolean) => ({
+        height: theme.space(9),
+        borderRadius: theme.radius.xl,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: active ? theme.colors.accent : 'transparent',
+    }),
+    segmentText: (active: boolean) => ({
+        ...theme.fontSize.sm,
+        fontWeight: theme.fontWeight.bold.fontWeight,
+        color: active ? theme.colors.onAccent : theme.colors.typography,
+    }),
+    summary: {
+        alignItems: 'baseline',
+        gap: theme.space(2),
+        flexWrap: 'wrap',
+    },
+    change: {
+        ...theme.fontSize.xl,
+        fontWeight: theme.fontWeight.bold.fontWeight,
+        color: theme.colors.accent,
+        fontVariant: ['tabular-nums'],
+    },
+    period: {
+        ...theme.fontSize.sm,
+        color: theme.colors.neutral[400],
+    },
+    chart: {
         position: 'relative',
         width: '100%',
-    },
-    chartViewport: {
-        marginRight: Y_AXIS_LABEL_AREA,
-    },
-    chartPager: {
-        width: '100%',
-    },
-    chartPage: {
-        flex: 1,
-    },
-    xAxisLine: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height: StyleSheet.hairlineWidth,
-    },
-    yAxisOverlay: {
-        position: 'absolute',
-        right: 0,
-        top: 0,
         height: CHART_HEIGHT,
-        width: Y_AXIS_LABEL_AREA,
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-    },
-    yAxisLabel: {
-        ...theme.fontSize['2xs'],
-        color: theme.colors.typography,
-        opacity: 0.6,
-    },
-    xAxisMetaRow: {
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: theme.space(1),
-        alignSelf: 'flex-start',
-    },
-    xAxisTickItem: {
-        flex: 1,
-    },
-    xAxisLabel: {
-        ...theme.fontSize['2xs'],
-        color: theme.colors.typography,
-        opacity: 0.6,
-    },
-    xAxisTickLabelStart: {
-        textAlign: 'left',
-    },
-    xAxisTickLabelCenter: {
-        textAlign: 'center',
-    },
-    xAxisTickLabelEnd: {
-        textAlign: 'right',
     },
     touchLayer: {
         position: 'absolute',
         left: 0,
         top: 0,
         height: CHART_HEIGHT,
-        zIndex: 4,
     },
-    selectedGuide: {
+    yLabel: {
         position: 'absolute',
-        width: CHART_GUIDE_WIDTH,
-        zIndex: 2,
+        right: 0,
+        width: Y_AXIS_WIDTH - 4,
+        textAlign: 'right',
+        ...theme.fontSize['2xs'],
+        color: theme.colors.neutral[400],
+        fontVariant: ['tabular-nums'],
     },
-    selectedGuideDot: {
-        position: 'absolute',
-        width: CHART_GUIDE_DOT_SIZE,
-        height: CHART_GUIDE_DOT_SIZE,
-        borderRadius: CHART_GUIDE_DOT_SIZE / 2,
-        zIndex: 3,
+    xLabels: {
+        justifyContent: 'space-between',
+        marginTop: -theme.space(2),
     },
-    pointerLabel: {
+    xLabel: {
+        ...theme.fontSize['2xs'],
+        color: theme.colors.neutral[400],
+    },
+    tooltip: {
         position: 'absolute',
         top: theme.space(1),
+        width: TOOLTIP_WIDTH,
         paddingHorizontal: theme.space(1),
         paddingVertical: theme.space(1.5),
         borderRadius: theme.radius['2xl'],
         backgroundColor: theme.colors.background,
         borderWidth: StyleSheet.hairlineWidth,
         borderColor: theme.colors.border,
-        zIndex: 3,
+        alignItems: 'center',
     },
-    pointerValue: {
+    tooltipValue: {
         ...theme.fontSize.sm,
-        color: theme.colors.typography,
         fontWeight: theme.fontWeight.bold.fontWeight,
-        textAlign: 'center',
-    },
-    pointerDate: {
-        ...theme.fontSize['2xs'],
         color: theme.colors.typography,
-        opacity: 0.6,
-        fontWeight: theme.fontWeight.medium.fontWeight,
-        textAlign: 'center',
+        fontVariant: ['tabular-nums'],
     },
-    emptyChart: {
+    tooltipMeta: {
+        ...theme.fontSize['2xs'],
+        color: theme.colors.neutral[400],
+    },
+    tooltipTrend: {
+        ...theme.fontSize['2xs'],
+        color: theme.colors.accent,
+    },
+    stats: {
+        gap: theme.space(2),
+    },
+    stat: {
+        flex: 1,
+        gap: theme.space(0.5),
+        paddingHorizontal: theme.space(2.5),
+        paddingVertical: theme.space(2),
+        borderRadius: theme.radius.xl,
+        backgroundColor: theme.colors.fieldBackground,
+    },
+    statLabel: {
+        ...theme.fontSize['2xs'],
+        color: theme.colors.neutral[400],
+    },
+    statValue: {
+        ...theme.fontSize.default,
+        fontWeight: theme.fontWeight.bold.fontWeight,
+        color: theme.colors.typography,
+        fontVariant: ['tabular-nums'],
+    },
+    legend: {
+        ...theme.fontSize.xs,
+        color: theme.colors.neutral[400],
+    },
+    empty: {
         height: CHART_HEIGHT,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    emptyChartText: {
+    emptyText: {
         color: theme.colors.typography,
         opacity: 0.55,
     },
 }));
 
-const withAlpha = (color: string, alpha: number): string => {
-    const normalized = color.trim();
-    const hex = normalized.startsWith('#') ? normalized.slice(1) : normalized;
-    if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
-        return normalized;
+const readRange = (key: string): ChartRange => {
+    try {
+        const value = storage.getString(key);
+        return isChartRange(value) ? value : 'all';
+    } catch {
+        return 'all';
     }
-
-    const value = Number.parseInt(hex, 16);
-    const r = (value >> 16) & 255;
-    const g = (value >> 8) & 255;
-    const b = value & 255;
-
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
+
+const circlePath = (x: number, y: number, r: number) =>
+    `M${(x - r).toFixed(1)},${y.toFixed(1)} a${r},${r} 0 1,0 ${2 * r},0 a${r},${r} 0 1,0 ${-2 * r},0`;
 
 type WeightChartProps = {
     timeline: MeasurementWithDisplayValue[];
     numberFormatter: Intl.NumberFormat;
     formatValue: (value: number) => string;
     emptyText: string;
+    /** MMKV key remembering the selected period. */
+    rangeStorageKey: string;
 };
 
-const WeightChart = ({ timeline, numberFormatter, formatValue, emptyText }: WeightChartProps) => {
+const WeightChart = ({
+    timeline,
+    numberFormatter,
+    formatValue,
+    emptyText,
+    rangeStorageKey,
+}: WeightChartProps) => {
     const { theme } = useUnistyles();
-    const [chartWidth, setChartWidth] = useState(0);
-    const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null);
-    const [currentPageState, setCurrentPageState] = useState({ index: 0, pageCount: 0 });
-    const [isScrubbing, setIsScrubbing] = useState(false);
-    const pagerRef = useRef<PagerView>(null);
-    const lastHapticPointIndexRef = useRef<number | null>(null);
-    const currentPageIndexRef = useRef(0);
-    const scrubActivationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const latestTouchXRef = useRef(0);
-    const touchStartXRef = useRef(0);
-    const touchStartYRef = useRef(0);
-    const isScrubbingRef = useRef(false);
+    const { t } = useTranslation(['screens']);
+    const [width, setWidth] = useState(0);
+    const [range, setRange] = useState<ChartRange>(() => readRange(rangeStorageKey));
+    const [selected, setSelected] = useState<number | null>(null);
+    const [now] = useState(() => Date.now());
+    const lastHapticIndex = useRef<number | null>(null);
 
-    const chartModel = useMemo(() => {
-        if (timeline.length === 0) {
-            return null;
-        }
+    const plotWidth = Math.max(1, width - Y_AXIS_WIDTH);
 
-        const values = timeline.map((entry) => entry.displayValue);
-        const minValue = Math.min(...values);
-        const maxValue = Math.max(...values);
-        const spread = Math.max(0.8, maxValue - minValue);
-        const padding = Math.max(0.2, spread * 0.14);
-        const axisMin = Math.max(0, minValue - padding);
-        const axisMax = maxValue + padding;
-        const shiftedMaxValue = Math.max(1, axisMax - axisMin);
-        const sectionStep = shiftedMaxValue / CHART_SECTIONS;
-
-        const yAxisLabels = Array.from({ length: CHART_SECTIONS + 1 }, (_, index) =>
-            numberFormatter.format(axisMax - sectionStep * index),
-        );
-
-        return {
-            axisMin,
-            shiftedMaxValue,
-            yAxisLabels,
-        };
-    }, [numberFormatter, timeline]);
-
-    const lineChartViewportWidth = useMemo(
-        () => Math.max(1, chartWidth - Y_AXIS_LABEL_AREA),
-        [chartWidth],
+    const model = useMemo(
+        () =>
+            width > 0
+                ? buildChartModel(timeline, range, {
+                      now,
+                      width: plotWidth,
+                      height: CHART_HEIGHT,
+                  })
+                : null,
+        [timeline, range, width, plotWidth, now],
     );
 
-    const timelinePages = useMemo(() => {
-        if (!chartModel || timeline.length === 0) {
-            return [] as WeightChartPage[];
-        }
+    const paths = useMemo(() => {
+        if (!model) return null;
+        const runs = splitAtGaps(model.points);
+        const trendOf = (run: typeof model.points) =>
+            smoothPath(run.map((point) => ({ x: point.x, y: point.yTrend })));
+        const line = runs.map(trendOf).join(' ');
+        const area = runs
+            .filter((run) => run.length > 1)
+            .map(
+                (run) =>
+                    `${trendOf(run)} L${run[run.length - 1].x.toFixed(1)},${CHART_HEIGHT} L${run[0].x.toFixed(1)},${CHART_HEIGHT} Z`,
+            )
+            .join(' ');
+        const dashes = model.points
+            .map((point, i) =>
+                point.gapDays > 0 && i > 0
+                    ? `M${model.points[i - 1].x.toFixed(1)},${model.points[i - 1].yTrend.toFixed(1)} L${point.x.toFixed(1)},${point.yTrend.toFixed(1)}`
+                    : '',
+            )
+            .join(' ');
+        const dots = model.points.map((point) => circlePath(point.x, point.yValue, 2)).join(' ');
+        const grid = model.ticks
+            .map((tick) => `M0,${tick.y.toFixed(1)} H${plotWidth.toFixed(1)}`)
+            .join(' ');
+        return { line, area, dashes, dots, grid, hasGaps: dashes.trim().length > 0 };
+    }, [model, plotWidth]);
 
-        const pages: WeightChartPage[] = [];
-        const pageRanges: { startIndex: number; endIndex: number }[] = [];
-        let endIndex = timeline.length - 1;
-
-        while (endIndex >= 0) {
-            const startIndex = Math.max(0, endIndex - (WEIGHT_POINTS_PER_PAGE - 1));
-            pageRanges.push({ startIndex, endIndex });
-
-            if (startIndex === 0) {
-                break;
-            }
-
-            endIndex = startIndex + PAGE_OVERLAP_POINTS - 1;
-        }
-
-        pageRanges.reverse().forEach(({ startIndex, endIndex }, pageIndex) => {
-            const points = timeline.slice(startIndex, endIndex + 1);
-            const leftInset = pageIndex === 0 ? CHART_EDGE_INSET : 0;
-            const rightInset = pageIndex === pageRanges.length - 1 ? CHART_EDGE_INSET : 0;
-            const segmentSpacing =
-                points.length > 1
-                    ? Math.max(
-                          0,
-                          (lineChartViewportWidth - leftInset - rightInset) / (points.length - 1),
-                      )
-                    : 0;
-
-            pages.push({
-                key: `weight-page-${startIndex}-${endIndex}`,
-                startIndex,
-                endIndex,
-                leftInset,
-                rightInset,
-                segmentSpacing,
-                points,
-                xAxisTicks: buildPageXAxisTicks(points),
-            });
-        });
-
-        return pages;
-    }, [chartModel, lineChartViewportWidth, timeline]);
-
-    const clampedCurrentPageIndex = useMemo(() => {
-        const pageCount = timelinePages.length;
-        if (pageCount === 0) return 0;
-
-        const maxIndex = pageCount - 1;
-        const wasOnLastPage =
-            currentPageState.pageCount === 0 ||
-            currentPageState.index >= currentPageState.pageCount - 1;
-
-        if (wasOnLastPage) return maxIndex;
-
-        return Math.max(0, Math.min(currentPageState.index, maxIndex));
-    }, [currentPageState.index, currentPageState.pageCount, timelinePages.length]);
-
-    useEffect(() => {
-        if (timelinePages.length === 0) {
-            currentPageIndexRef.current = 0;
-            return;
-        }
-        if (!pagerRef.current) return;
-        if (currentPageIndexRef.current === clampedCurrentPageIndex) return;
-
-        pagerRef.current.setPageWithoutAnimation(clampedCurrentPageIndex);
-        currentPageIndexRef.current = clampedCurrentPageIndex;
-    }, [clampedCurrentPageIndex, timelinePages.length]);
-
-    const clampedSelectedPointIndex = useMemo(() => {
-        if (selectedPointIndex == null) return null;
-        return Math.max(0, Math.min(selectedPointIndex, timeline.length - 1));
-    }, [selectedPointIndex, timeline.length]);
-
-    const clearScrubActivationTimeout = useCallback(() => {
-        if (scrubActivationTimeoutRef.current == null) return;
-
-        clearTimeout(scrubActivationTimeoutRef.current);
-        scrubActivationTimeoutRef.current = null;
+    const onLayout = useCallback((event: LayoutChangeEvent) => {
+        const next = Math.round(event.nativeEvent.layout.width);
+        if (next > 0) setWidth(next);
     }, []);
 
-    const resolvePointIndexFromTouchX = useCallback(
-        (page: WeightChartPage, touchX: number) => {
-            if (page.points.length <= 1 || page.segmentSpacing <= 0) {
-                return 0;
-            }
-
-            const clampedX = Math.max(0, Math.min(touchX, lineChartViewportWidth));
-            const rawIndex = Math.round((clampedX - page.leftInset) / page.segmentSpacing);
-
-            return Math.max(0, Math.min(rawIndex, page.points.length - 1));
-        },
-        [lineChartViewportWidth],
-    );
-
-    const selectPointFromTouch = useCallback(
-        (page: WeightChartPage, pageIndex: number, touchX: number) => {
-            if (pageIndex !== currentPageIndexRef.current) return;
-
-            const localPointIndex = resolvePointIndexFromTouchX(page, touchX);
-            const nextPointIndex = page.startIndex + localPointIndex;
-
-            setSelectedPointIndex((prev) => (prev === nextPointIndex ? prev : nextPointIndex));
-        },
-        [resolvePointIndexFromTouchX],
-    );
-
-    const resetScrubbingState = useCallback(() => {
-        clearScrubActivationTimeout();
-        isScrubbingRef.current = false;
-        setIsScrubbing(false);
-        setSelectedPointIndex(null);
-    }, [clearScrubActivationTimeout]);
-
-    useEffect(() => () => clearScrubActivationTimeout(), [clearScrubActivationTimeout]);
-
-    const handleChartTouchStart = useCallback(
-        (event: GestureResponderEvent, page: WeightChartPage, pageIndex: number) => {
-            clearScrubActivationTimeout();
-
-            const { locationX, locationY } = event.nativeEvent;
-            latestTouchXRef.current = locationX;
-            touchStartXRef.current = locationX;
-            touchStartYRef.current = locationY;
-            isScrubbingRef.current = false;
-
-            scrubActivationTimeoutRef.current = setTimeout(() => {
-                scrubActivationTimeoutRef.current = null;
-                isScrubbingRef.current = true;
-                setIsScrubbing(true);
-                selectPointFromTouch(page, pageIndex, latestTouchXRef.current);
-            }, SCRUB_ACTIVATION_DELAY_MS);
-        },
-        [clearScrubActivationTimeout, selectPointFromTouch],
-    );
-
-    const handleChartTouchMove = useCallback(
-        (event: GestureResponderEvent, page: WeightChartPage, pageIndex: number) => {
-            const { locationX, locationY } = event.nativeEvent;
-            latestTouchXRef.current = locationX;
-
-            if (isScrubbingRef.current) {
-                selectPointFromTouch(page, pageIndex, locationX);
-                return;
-            }
-
-            const distanceX = Math.abs(locationX - touchStartXRef.current);
-            const distanceY = Math.abs(locationY - touchStartYRef.current);
-
-            if (distanceX > SCRUB_CANCEL_DISTANCE || distanceY > SCRUB_CANCEL_DISTANCE) {
-                clearScrubActivationTimeout();
+    const onRange = useCallback(
+        (next: ChartRange) => {
+            setRange(next);
+            setSelected(null);
+            try {
+                storage.set(rangeStorageKey, next);
+            } catch {
+                // Remembering the period is only a convenience.
             }
         },
-        [clearScrubActivationTimeout, selectPointFromTouch],
+        [rangeStorageKey],
     );
 
-    const handlePageSelected = useCallback(
-        (event: PagerViewOnPageSelectedEvent) => {
-            const nextPageIndex = event.nativeEvent.position;
-            currentPageIndexRef.current = nextPageIndex;
-            setCurrentPageState((prev) =>
-                prev.index === nextPageIndex && prev.pageCount === timelinePages.length
-                    ? prev
-                    : { index: nextPageIndex, pageCount: timelinePages.length },
-            );
-            resetScrubbingState();
+    const pickAt = useCallback(
+        (event: GestureResponderEvent) => {
+            if (!model) return;
+            const x = event.nativeEvent.locationX;
+            let best = 0;
+            model.points.forEach((point, i) => {
+                if (Math.abs(point.x - x) < Math.abs(model.points[best].x - x)) best = i;
+            });
+            setSelected(best);
+            if (lastHapticIndex.current !== best) {
+                lastHapticIndex.current = best;
+                Haptics.selectionAsync().catch(() => undefined);
+            }
         },
-        [resetScrubbingState, timelinePages.length],
+        [model],
     );
 
-    useEffect(() => {
-        if (!isScrubbing || clampedSelectedPointIndex == null) {
-            lastHapticPointIndexRef.current = null;
-            return;
-        }
+    if (timeline.length === 0) {
+        return (
+            <Box style={styles.empty}>
+                <Text style={styles.emptyText}>{emptyText}</Text>
+            </Box>
+        );
+    }
 
-        if (lastHapticPointIndexRef.current === clampedSelectedPointIndex) {
-            return;
-        }
+    const points = model?.points ?? [];
+    const selectedIndex = points.length
+        ? Math.min(selected ?? points.length - 1, points.length - 1)
+        : -1;
+    const point = selectedIndex >= 0 ? points[selectedIndex] : null;
+    const formatNumber = (value: number) =>
+        model && model.step < 1
+            ? numberFormatter.format(value)
+            : numberFormatter.format(Math.round(value));
+    const formatDate = (time: number) => dayjs(time).format('D MMM');
 
-        lastHapticPointIndexRef.current = clampedSelectedPointIndex;
-        void Haptics.selectionAsync();
-    }, [clampedSelectedPointIndex, isScrubbing]);
+    const xLabelPoints = (() => {
+        if (points.length < 3) return points;
+        const middle = points.reduce((best, candidate) =>
+            Math.abs(candidate.x - plotWidth / 2) < Math.abs(best.x - plotWidth / 2)
+                ? candidate
+                : best,
+        );
+        return [points[0], middle, points[points.length - 1]];
+    })();
 
-    const currentPage = timelinePages[clampedCurrentPageIndex] ?? null;
-    const currentPageTicks = currentPage?.xAxisTicks ?? [];
-    const currentPageLeftInset = currentPage?.leftInset ?? 0;
-    const currentPageRightInset = currentPage?.rightInset ?? 0;
-    const chartColor = theme.colors.accent;
-    const chartGuideColor = withAlpha(chartColor, CHART_GUIDE_OPACITY);
+    const change = model?.change ?? 0;
+    const changeText =
+        Math.abs(change) < 0.05
+            ? `±${formatValue(0)}`
+            : `${change < 0 ? '−' : '+'}${formatValue(Math.abs(change))}`;
 
     return (
-        <VStack
-            style={styles.chartWrap}
-            onLayout={(event) => {
-                const width = Math.round(event.nativeEvent.layout.width);
-                if (width > 0 && width !== chartWidth) {
-                    setChartWidth(width);
-                }
-            }}
-        >
-            {chartModel && chartWidth > 0 && timelinePages.length > 0 ? (
-                <VStack style={styles.chartFrame}>
-                    <VStack style={styles.chartViewport}>
-                        <PagerView
-                            ref={pagerRef}
-                            style={[styles.chartPager, { height: CHART_HEIGHT }]}
-                            initialPage={Math.max(0, timelinePages.length - 1)}
-                            offscreenPageLimit={1}
-                            scrollEnabled={timelinePages.length > 1 && !isScrubbing}
-                            onPageSelected={handlePageSelected}
-                        >
-                            {timelinePages.map((page, pageIndex) => {
-                                const shouldRenderPage =
-                                    Math.abs(pageIndex - clampedCurrentPageIndex) <=
-                                    PAGE_PRERENDER_RADIUS;
-
-                                if (!shouldRenderPage) {
-                                    return <View key={page.key} style={styles.chartPage} />;
-                                }
-
-                                const selectedLocalPointIndex =
-                                    isScrubbing &&
-                                    selectedPointIndex != null &&
-                                    selectedPointIndex >= page.startIndex &&
-                                    selectedPointIndex <= page.endIndex
-                                        ? selectedPointIndex - page.startIndex
-                                        : null;
-
-                                const selectedGuideX =
-                                    selectedLocalPointIndex == null
-                                        ? null
-                                        : Math.round(
-                                              page.leftInset +
-                                                  selectedLocalPointIndex * page.segmentSpacing,
-                                          );
-
-                                const selectedPoint =
-                                    selectedLocalPointIndex == null
-                                        ? null
-                                        : (page.points[selectedLocalPointIndex] ?? null);
-
-                                const selectedGuideY =
-                                    selectedPoint == null
-                                        ? null
-                                        : Math.max(
-                                              0,
-                                              Math.min(
-                                                  CHART_HEIGHT,
-                                                  CHART_HEIGHT -
-                                                      ((selectedPoint.displayValue -
-                                                          chartModel.axisMin) /
-                                                          chartModel.shiftedMaxValue) *
-                                                          CHART_HEIGHT,
-                                              ),
-                                          );
-
-                                const pointerLabelLeft =
-                                    selectedGuideX == null
-                                        ? 0
-                                        : Math.max(
-                                              0,
-                                              Math.min(
-                                                  selectedGuideX - CHART_POINTER_LABEL_WIDTH / 2,
-                                                  Math.max(
-                                                      0,
-                                                      lineChartViewportWidth -
-                                                          CHART_POINTER_LABEL_WIDTH,
-                                                  ),
-                                              ),
-                                          );
-
-                                return (
-                                    <View key={page.key} style={styles.chartPage}>
-                                        <LineChart
-                                            data={page.points.map((entry, index) => ({
-                                                value: entry.displayValue - chartModel.axisMin,
-                                                spacing:
-                                                    index < page.points.length - 1
-                                                        ? page.segmentSpacing
-                                                        : 0,
-                                            }))}
-                                            curved
-                                            width={lineChartViewportWidth}
-                                            height={CHART_HEIGHT}
-                                            disableScroll
-                                            adjustToWidth
-                                            areaChart
-                                            spacing={page.segmentSpacing}
-                                            initialSpacing={page.leftInset}
-                                            endSpacing={page.rightInset}
-                                            maxValue={chartModel.shiftedMaxValue}
-                                            noOfSections={CHART_SECTIONS}
-                                            thickness={2}
-                                            color={chartColor}
-                                            startFillColor={chartColor}
-                                            endFillColor={chartColor}
-                                            startOpacity={1}
-                                            startOpacity1={CHART_LINE_OPACITY}
-                                            endOpacity={0}
-                                            hideDataPoints
-                                            hideYAxisText
-                                            yAxisSide={yAxisSides.RIGHT}
-                                            yAxisLabelWidth={0}
-                                            yAxisThickness={0}
-                                            xAxisThickness={0}
-                                            xAxisColor={theme.colors.border}
-                                            xAxisLabelsHeight={0}
-                                            labelsExtraHeight={0}
-                                            rulesColor={theme.colors.border}
-                                            rulesThickness={1}
-                                            hideRules={false}
-                                        />
-                                        <Box
-                                            pointerEvents="none"
-                                            style={[
-                                                styles.xAxisLine,
-                                                {
-                                                    backgroundColor: theme.colors.border,
-                                                },
-                                            ]}
-                                        />
-                                        {selectedGuideX != null && selectedGuideY != null && (
-                                            <>
-                                                <Box
-                                                    pointerEvents="none"
-                                                    style={[
-                                                        styles.selectedGuide,
-                                                        {
-                                                            left:
-                                                                selectedGuideX -
-                                                                CHART_GUIDE_WIDTH / 2,
-                                                            top: selectedGuideY + CHART_EDGE_INSET,
-                                                            height: Math.max(
-                                                                0,
-                                                                CHART_HEIGHT - selectedGuideY,
-                                                            ),
-                                                            backgroundColor: chartGuideColor,
-                                                        },
-                                                    ]}
-                                                />
-                                                <Box
-                                                    pointerEvents="none"
-                                                    style={[
-                                                        styles.selectedGuideDot,
-                                                        {
-                                                            left:
-                                                                selectedGuideX -
-                                                                CHART_GUIDE_DOT_SIZE / 2,
-                                                            top: selectedGuideY + CHART_EDGE_INSET,
-                                                            backgroundColor: chartColor,
-                                                        },
-                                                    ]}
-                                                />
-                                            </>
-                                        )}
-                                        {selectedPoint && (
-                                            <VStack
-                                                pointerEvents="none"
-                                                style={[
-                                                    styles.pointerLabel,
-                                                    {
-                                                        left: pointerLabelLeft,
-                                                        width: CHART_POINTER_LABEL_WIDTH,
-                                                    },
-                                                ]}
-                                            >
-                                                <Text style={styles.pointerValue}>
-                                                    {formatValue(selectedPoint.displayValue)}
-                                                </Text>
-                                                <Text style={styles.pointerDate}>
-                                                    {dayjs(selectedPoint.recordedAt).format(
-                                                        'D MMM YYYY',
-                                                    )}
-                                                </Text>
-                                            </VStack>
-                                        )}
-                                        <View
-                                            style={[
-                                                styles.touchLayer,
-                                                { width: lineChartViewportWidth },
-                                            ]}
-                                            onTouchStart={(event) =>
-                                                handleChartTouchStart(event, page, pageIndex)
-                                            }
-                                            onTouchMove={(event) =>
-                                                handleChartTouchMove(event, page, pageIndex)
-                                            }
-                                            onTouchEnd={resetScrubbingState}
-                                            onTouchCancel={resetScrubbingState}
-                                            onStartShouldSetResponder={() => false}
-                                            onMoveShouldSetResponder={() => isScrubbingRef.current}
-                                            onResponderGrant={(event) =>
-                                                handleChartTouchMove(event, page, pageIndex)
-                                            }
-                                            onResponderMove={(event) =>
-                                                handleChartTouchMove(event, page, pageIndex)
-                                            }
-                                            onResponderRelease={resetScrubbingState}
-                                            onResponderTerminate={resetScrubbingState}
-                                            onResponderTerminationRequest={() =>
-                                                !isScrubbingRef.current
-                                            }
-                                        />
-                                    </View>
-                                );
+        <VStack style={styles.wrap} onLayout={onLayout}>
+            <HStack
+                style={styles.segmented}
+                accessibilityRole="tablist"
+                accessibilityLabel={t('results.scale.chart.rangeLabel', { ns: 'screens' })}
+            >
+                {chartRanges.map((item) => {
+                    const active = item === range;
+                    return (
+                        <Pressable
+                            key={item}
+                            style={styles.segment}
+                            onPress={() => onRange(item)}
+                            accessibilityRole="tab"
+                            accessibilityState={{ selected: active }}
+                            accessibilityLabel={t(`results.scale.chart.rangesLong.${item}`, {
+                                ns: 'screens',
                             })}
-                        </PagerView>
-                        <HStack
+                        >
+                            <Box style={styles.segmentInner(active)}>
+                                <Text style={styles.segmentText(active)}>
+                                    {t(`results.scale.chart.ranges.${item}`, { ns: 'screens' })}
+                                </Text>
+                            </Box>
+                        </Pressable>
+                    );
+                })}
+            </HStack>
+
+            {model && paths && point ? (
+                <>
+                    <HStack style={styles.summary}>
+                        <Text style={styles.change}>{changeText}</Text>
+                        <Text style={styles.period}>
+                            {points.length === 1
+                                ? t('results.scale.chart.periodOne', {
+                                      ns: 'screens',
+                                      date: formatDate(points[0].time),
+                                  })
+                                : t('results.scale.chart.period', {
+                                      ns: 'screens',
+                                      from: formatDate(points[0].time),
+                                      to: formatDate(points[points.length - 1].time),
+                                  })}
+                        </Text>
+                    </HStack>
+
+                    <View style={styles.chart}>
+                        <Svg
+                            width={plotWidth}
+                            height={CHART_HEIGHT}
+                            style={{ overflow: 'visible' }}
+                        >
+                            <Defs>
+                                <LinearGradient
+                                    id={`${rangeStorageKey}-fill`}
+                                    x1="0"
+                                    y1="0"
+                                    x2="0"
+                                    y2="1"
+                                >
+                                    <Stop
+                                        offset="0"
+                                        stopColor={theme.colors.accent}
+                                        stopOpacity={0.32}
+                                    />
+                                    <Stop
+                                        offset="1"
+                                        stopColor={theme.colors.accent}
+                                        stopOpacity={0}
+                                    />
+                                </LinearGradient>
+                            </Defs>
+                            <Path d={paths.grid} stroke={theme.colors.border} strokeWidth={1} />
+                            {paths.area.length > 0 && (
+                                <Path d={paths.area} fill={`url(#${rangeStorageKey}-fill)`} />
+                            )}
+                            {paths.hasGaps && (
+                                <Path
+                                    d={paths.dashes}
+                                    stroke={theme.colors.accent}
+                                    strokeOpacity={0.55}
+                                    strokeWidth={2}
+                                    strokeDasharray="3 4"
+                                    fill="none"
+                                />
+                            )}
+                            <Path d={paths.dots} fill={theme.colors.accent} fillOpacity={0.45} />
+                            <Path
+                                d={paths.line}
+                                stroke={theme.colors.accent}
+                                strokeWidth={LINE_WIDTH}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                fill="none"
+                            />
+                            <Path
+                                d={`M${point.x.toFixed(1)},0 V${CHART_HEIGHT}`}
+                                stroke={theme.colors.accent}
+                                strokeOpacity={0.4}
+                                strokeWidth={2}
+                            />
+                            <Circle
+                                cx={point.x}
+                                cy={point.yTrend}
+                                r={9}
+                                fill={theme.colors.accent}
+                                fillOpacity={0.25}
+                            />
+                            <Circle
+                                cx={point.x}
+                                cy={point.yTrend}
+                                r={5}
+                                fill={theme.colors.accent}
+                                stroke={theme.colors.foreground}
+                                strokeWidth={2}
+                            />
+                        </Svg>
+                        {model.ticks.map((tick) => (
+                            <Text
+                                key={`tick-${tick.value}`}
+                                style={[styles.yLabel, { top: tick.y - 7 }]}
+                                allowFontScaling={false}
+                            >
+                                {formatNumber(tick.value)}
+                            </Text>
+                        ))}
+                        <View
+                            pointerEvents="none"
                             style={[
-                                styles.xAxisMetaRow,
+                                styles.tooltip,
                                 {
-                                    width: lineChartViewportWidth,
-                                    paddingLeft: currentPageLeftInset,
-                                    paddingRight: currentPageRightInset,
+                                    left: Math.max(
+                                        0,
+                                        Math.min(
+                                            plotWidth - TOOLTIP_WIDTH,
+                                            point.x - TOOLTIP_WIDTH / 2,
+                                        ),
+                                    ),
                                 },
                             ]}
                         >
-                            {currentPageTicks.map((tick, index) => (
-                                <Box
-                                    key={`scale-x-axis-${clampedCurrentPageIndex}-${index}`}
-                                    style={styles.xAxisTickItem}
-                                >
-                                    <Text
-                                        numberOfLines={1}
-                                        style={[
-                                            styles.xAxisLabel,
-                                            tick.align === 'start'
-                                                ? styles.xAxisTickLabelStart
-                                                : tick.align === 'end'
-                                                  ? styles.xAxisTickLabelEnd
-                                                  : styles.xAxisTickLabelCenter,
-                                        ]}
-                                    >
-                                        {tick.label}
-                                    </Text>
-                                </Box>
-                            ))}
-                        </HStack>
-                    </VStack>
-                    <VStack pointerEvents="none" style={styles.yAxisOverlay}>
-                        {chartModel.yAxisLabels.map((label, index) => (
-                            <Text key={`scale-y-axis-${index}`} style={styles.yAxisLabel}>
-                                {label}
+                            <Text style={styles.tooltipValue}>{formatValue(point.value)}</Text>
+                            <Text style={styles.tooltipMeta}>{formatDate(point.time)}</Text>
+                            <Text style={styles.tooltipTrend}>
+                                {t('results.scale.chart.trend', {
+                                    ns: 'screens',
+                                    value: numberFormatter.format(point.trend),
+                                })}
+                            </Text>
+                        </View>
+                        <View
+                            style={[styles.touchLayer, { width: plotWidth }]}
+                            accessible
+                            accessibilityLabel={t('results.scale.chart.pointLabel', {
+                                ns: 'screens',
+                                date: formatDate(point.time),
+                                value: formatValue(point.value),
+                            })}
+                            onStartShouldSetResponder={() => true}
+                            onMoveShouldSetResponder={() => true}
+                            onResponderGrant={pickAt}
+                            onResponderMove={pickAt}
+                            onResponderTerminationRequest={() => true}
+                        />
+                    </View>
+
+                    <HStack style={[styles.xLabels, { width: plotWidth }]}>
+                        {xLabelPoints.map((item) => (
+                            <Text key={`x-${item.time}`} style={styles.xLabel}>
+                                {formatDate(item.time)}
                             </Text>
                         ))}
-                    </VStack>
-                </VStack>
+                    </HStack>
+
+                    <HStack style={styles.stats}>
+                        {[
+                            ['min', numberFormatter.format(model.min)],
+                            ['max', numberFormatter.format(model.max)],
+                            ['average', numberFormatter.format(model.average)],
+                            ['count', String(points.length)],
+                        ].map(([key, value]) => (
+                            <VStack key={key} style={styles.stat}>
+                                <Text style={styles.statLabel} numberOfLines={1}>
+                                    {t(`results.scale.chart.stats.${key}`, { ns: 'screens' })}
+                                </Text>
+                                <Text style={styles.statValue} numberOfLines={1}>
+                                    {value}
+                                </Text>
+                            </VStack>
+                        ))}
+                    </HStack>
+
+                    <Text style={styles.legend}>
+                        {t('results.scale.chart.legend', { ns: 'screens' })}
+                        {paths.hasGaps
+                            ? ` ${t('results.scale.chart.legendGaps', { ns: 'screens' })}`
+                            : ''}
+                    </Text>
+                </>
             ) : (
-                <Box style={styles.emptyChart}>
-                    <Text style={styles.emptyChartText}>{emptyText}</Text>
+                <Box style={styles.empty}>
+                    <Text style={styles.emptyText}>
+                        {width > 0 ? t('results.scale.chart.rangeEmpty', { ns: 'screens' }) : ''}
+                    </Text>
                 </Box>
             )}
         </VStack>

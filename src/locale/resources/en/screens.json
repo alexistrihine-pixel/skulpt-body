@@ -62,7 +62,24 @@
             },
             "chart": {
                 "empty": "No weight logs yet",
-                "bodyFatPercentageEmpty": "No body fat logs yet"
+                "bodyFatPercentageEmpty": "No body fat logs yet",
+                "rangeLabel": "Period",
+                "ranges": { "1m": "1M", "3m": "3M", "6m": "6M", "1y": "1Y", "all": "All" },
+                "rangesLong": {
+                    "1m": "1 month",
+                    "3m": "3 months",
+                    "6m": "6 months",
+                    "1y": "1 year",
+                    "all": "All"
+                },
+                "rangeEmpty": "No entries in this period",
+                "period": "from {{from}} to {{to}}",
+                "periodOne": "on {{date}}",
+                "trend": "trend {{value}}",
+                "pointLabel": "{{date}}: {{value}}. Drag to read other entries",
+                "stats": { "min": "Min", "max": "Max", "average": "Average", "count": "Entries" },
+                "legend": "Line: trend (7-day average). Dots: each entry.",
+                "legendGaps": "Dashed: long stretches without entries, shortened."
             },
             "modal": {
                 "date": "Date",
@@ -110,7 +127,11 @@
             "footnote": "One ring = 5 sets, 4 full rings = 16 sets or more. A secondary muscle counts as half a set.",
             "close": "Close detail",
             "showDetail": "{{group}}: {{value}} sets. Show detail",
-            "empty": "No completed sets in this period."
+            "empty": "No completed sets in this period.",
+            "subHint": "Tap a muscle marked › to see its heads.",
+            "headsHint": "A set counts for every head it works, so the “{{muscle}}” total is not the sum of the heads.",
+            "back": "Back to {{group}}",
+            "showHeads": "{{muscle}}: {{value}} sets. Show heads"
         }
     },
     "exercises": {

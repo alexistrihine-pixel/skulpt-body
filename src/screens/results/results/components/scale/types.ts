@@ -14,19 +14,3 @@ export type MeasurementWithDisplayValue = {
     updatedAt: MeasurementSelect['updatedAt'];
     displayValue: number;
 };
-
-export type XAxisTick = {
-    label: string;
-    align: 'start' | 'center' | 'end';
-};
-
-export type WeightChartPage = {
-    key: string;
-    startIndex: number;
-    endIndex: number;
-    leftInset: number;
-    rightInset: number;
-    segmentSpacing: number;
-    points: MeasurementWithDisplayValue[];
-    xAxisTicks: XAxisTick[];
-};

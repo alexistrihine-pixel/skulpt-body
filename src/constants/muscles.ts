@@ -281,6 +281,47 @@ export const getSecondLevelMuscleValue = (value: string | null | undefined): str
     return current;
 };
 
+/**
+ * Keys of a muscle at each level of the results drill-down, from the top-level group:
+ * `biceps_long_head` -> `['arms', 'arms/biceps', 'arms/biceps/biceps_long_head']`.
+ * A value tagged above a level that has children fills that level with itself
+ * (`biceps` -> `[..., 'arms/biceps/biceps']`, shown as "unspecified"), so every level
+ * adds up. Levels deeper than three are folded into the third one.
+ */
+export const getMuscleLevelKeys = (value: string | null | undefined): string[] => {
+    const normalizedValue = normalizeMuscleValue(value);
+    if (!normalizedValue) return [];
+    const top = muscleToTopLevelMap[normalizedValue];
+    if (!top) return [];
+
+    const chain: string[] = [normalizedValue];
+    let parent = muscleParentMap[normalizedValue] || null;
+    while (parent) {
+        chain.unshift(parent);
+        parent = muscleParentMap[parent] || null;
+    }
+    // Groups with a title (no own value) start straight at their choices.
+    if (chain[0] !== top) chain.unshift(top);
+
+    const levels = chain.slice(0, 3);
+    // Fill once only: a group-level tag stays `group/group`, never `group/group/group`.
+    const last = levels[levels.length - 1];
+    if (levels.length < 3 && (levels.length === 1 || muscleHasChildren(last))) {
+        levels.push(last);
+    }
+
+    return levels.map((_, index) => levels.slice(0, index + 1).join('/'));
+};
+
+const muscleChildrenCount: Record<string, number> = {};
+Object.entries(muscleParentMap).forEach(([value, parentValue]) => {
+    if (parentValue && !legacyMuscleAliasMap[value]) {
+        muscleChildrenCount[parentValue] = (muscleChildrenCount[parentValue] ?? 0) + 1;
+    }
+});
+
+export const muscleHasChildren = (value: string): boolean => (muscleChildrenCount[value] ?? 0) > 0;
+
 const isMuscleAncestor = (candidate: string, value: string): boolean => {
     let current = muscleParentMap[value] || null;
 
