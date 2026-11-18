@@ -36,9 +36,18 @@
 
 Le détail de chaque version est dans les [Releases](https://github.com/alexistrihine-pixel/skulpt-body/releases).
 
-**Tu viens de Hevy ?** Tu peux garder tout ton historique. Dans Hevy, exporte tes séances (Profil › Réglages › Export & Import Data › Export Workouts), puis dans Skulpt Body touche Réglages › Données › **Importer depuis Hevy (CSV)** et choisis le fichier.
-
 ## Fonctionnalités
+
+### Importer tes données Hevy
+
+Tu viens de Hevy ? Tu gardes tout ton historique en deux minutes :
+
+1. Dans Hevy, exporte tes séances : Profil › Réglages › Export & Import Data › **Export Workouts**.
+2. Dans Skulpt Body, touche Réglages › Données › **Importer depuis Hevy (CSV)** et choisis le fichier.
+
+Séances, séries, charges, répétitions et notes d'exercice sont importées. Tu peux refaire l'import après chaque nouvel export : les séances déjà présentes sont ignorées.
+
+À l'inverse, Réglages › Données › **Exporter mes séances (CSV)** sort toutes tes séances au même format, pour les sauvegarder ou les envoyer.
 
 ### Accueil
 
@@ -103,7 +112,7 @@ Le détail de chaque version est dans les [Releases](https://github.com/alexistr
 
 - **Couleurs** : violet par défaut, 5 autres palettes sombres ou la tienne (Réglages › Thème).
 - Thème clair, sombre ou celui du système ; unités kg/lb ; langue ; sons et vibrations.
-- **Données** : import de l'historique depuis un export CSV de Hevy (séances, séries, notes d'exercice ; les séances déjà présentes sont ignorées) et export de toutes tes séances en CSV, au même format, pour les sauvegarder ou les envoyer.
+- **Données** : import depuis Hevy et export CSV (voir [Importer tes données Hevy](#importer-tes-données-hevy)).
 - Tout en français. Les données sont stockées sur le téléphone : pas de compte, pas de synchronisation, pas de pub.
 
 ## Crédits et licence
