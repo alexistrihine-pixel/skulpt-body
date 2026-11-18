@@ -50,6 +50,23 @@ describe('buildChartModel', () => {
         expect(splitAtGaps(model.points).map((run) => run.length)).toEqual([3, 2]);
     });
 
+    it('keeps most of the width for tracked periods when gaps are many', () => {
+        const sparse = [
+            entry('2023-01-01', 66),
+            entry('2023-06-01', 70),
+            entry('2023-12-01', 74),
+            entry('2024-06-01', 78),
+            entry('2025-01-01', 75),
+            entry('2025-01-02', 75.2),
+            entry('2025-01-11', 75.4),
+        ];
+        const model = buildChartModel(sparse, 'all', { now, width: 300, height: 100, inset: 0 })!;
+        const xs = model.points.map((point) => point.x);
+        // 4 gaps share 30 % of the width, the 10 tracked days get the rest.
+        expect(xs[4]).toBeCloseTo(90);
+        expect(xs[6]).toBeCloseTo(300);
+    });
+
     it('computes a 7-day trailing trend and round ticks', () => {
         const model = buildChartModel(timeline, 'all', { now, width: 300, height: 100 })!;
         expect(model.points[2].trend).toBeCloseTo(71);

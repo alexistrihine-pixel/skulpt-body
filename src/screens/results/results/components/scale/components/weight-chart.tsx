@@ -14,6 +14,7 @@ import { VStack } from '@/components/primitives/vstack';
 import { storage } from '@/storage';
 import { type MeasurementWithDisplayValue } from '../types';
 import {
+    areaPath,
     buildChartModel,
     type ChartRange,
     chartRanges,
@@ -214,13 +215,10 @@ const WeightChart = ({
         const trendOf = (run: typeof model.points) =>
             smoothPath(run.map((point) => ({ x: point.x, y: point.yTrend })));
         const line = runs.map(trendOf).join(' ');
-        const area = runs
-            .filter((run) => run.length > 1)
-            .map(
-                (run) =>
-                    `${trendOf(run)} L${run[run.length - 1].x.toFixed(1)},${CHART_HEIGHT} L${run[0].x.toFixed(1)},${CHART_HEIGHT} Z`,
-            )
-            .join(' ');
+        const area = areaPath(
+            runs.map((run) => run.map((point) => ({ x: point.x, y: point.yTrend }))),
+            CHART_HEIGHT,
+        );
         const dashes = model.points
             .map((point, i) =>
                 point.gapDays > 0 && i > 0
@@ -287,7 +285,12 @@ const WeightChart = ({
         model && model.step < 1
             ? numberFormatter.format(value)
             : numberFormatter.format(Math.round(value));
-    const formatDate = (time: number) => dayjs(time).format('D MMM');
+    // Show the year once the period covers more than one calendar year.
+    const spansYears =
+        points.length > 0 &&
+        dayjs(points[0].time).year() !== dayjs(points[points.length - 1].time).year();
+    const formatDate = (time: number) => dayjs(time).format(spansYears ? 'D MMM YYYY' : 'D MMM');
+    const formatAxisDate = (time: number) => dayjs(time).format(spansYears ? 'MMM YYYY' : 'D MMM');
 
     const xLabelPoints = (() => {
         if (points.length < 3) return points;
@@ -476,7 +479,7 @@ const WeightChart = ({
                     <HStack style={[styles.xLabels, { width: plotWidth }]}>
                         {xLabelPoints.map((item) => (
                             <Text key={`x-${item.time}`} style={styles.xLabel}>
-                                {formatDate(item.time)}
+                                {formatAxisDate(item.time)}
                             </Text>
                         ))}
                     </HStack>

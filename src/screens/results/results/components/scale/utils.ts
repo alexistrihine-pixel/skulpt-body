@@ -6,6 +6,7 @@ const DAY_MS = 86_400_000;
 const TREND_WINDOW_DAYS = 7;
 /** Longer stretches without a weigh-in are drawn dashed and squeezed to `gapWidth`. */
 const GAP_DAYS = 21;
+const MAX_GAP_SHARE = 0.3;
 
 export const chartRanges = ['1m', '3m', '6m', '1y', 'all'] as const;
 export type ChartRange = (typeof chartRanges)[number];
@@ -112,7 +113,10 @@ const buildChartModel = (
             else normalDays += days;
         }
         const usable = Math.max(1, width - 2 * inset);
-        const squeezed = normalDays > 0 ? Math.min(gapWidth, usable / (gaps + 1)) : 0;
+        // Gaps together never take more than MAX_GAP_SHARE of the width, so a sparse
+        // history keeps room for the periods that were actually tracked.
+        const squeezed =
+            normalDays > 0 ? Math.min(gapWidth, (usable * MAX_GAP_SHARE) / Math.max(gaps, 1)) : 0;
         const perDay = normalDays > 0 ? (usable - gaps * squeezed) / normalDays : 0;
         const perGap = normalDays > 0 ? squeezed : usable / gaps;
         let x = inset;
@@ -182,6 +186,22 @@ const smoothPath = (points: XY[]): string => {
     return d;
 };
 
+/**
+ * One closed area under all runs: smooth inside a run, straight across a gap, so a
+ * sparse history doesn't turn into a row of thin filled columns.
+ */
+const areaPath = (runs: XY[][], bottom: number): string => {
+    const drawn = runs.filter((run) => run.length > 0);
+    if (drawn.length === 0) return '';
+    const all = drawn.flat();
+    if (all.length < 2) return '';
+    const body = drawn
+        .map((run, index) => (index === 0 ? smoothPath(run) : smoothPath(run).replace(/^M/, ' L')))
+        .join('');
+    const f = (v: number) => v.toFixed(1);
+    return `${body} L${f(all[all.length - 1].x)},${bottom} L${f(all[0].x)},${bottom} Z`;
+};
+
 /** Splits points into runs separated by squeezed gaps. */
 const splitAtGaps = (points: ChartPoint[]): ChartPoint[][] => {
     const runs: ChartPoint[][] = [];
@@ -192,4 +212,4 @@ const splitAtGaps = (points: ChartPoint[]): ChartPoint[][] => {
     return runs;
 };
 
-export { buildChartModel, convertToDisplayWeight, smoothPath, splitAtGaps };
+export { areaPath, buildChartModel, convertToDisplayWeight, smoothPath, splitAtGaps };
