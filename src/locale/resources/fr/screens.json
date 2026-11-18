@@ -729,7 +729,8 @@
             "rangeMin": "Minimum de reps",
             "rangeMax": "Maximum de reps",
             "rangeApply": "OK",
-            "rangeClear": "Pas de fourchette"
+            "rangeClear": "Pas de fourchette",
+            "renamePlaceholder": "Nom de l'exercice"
         }
     }
 }

@@ -729,7 +729,8 @@
             "rangeMin": "Minimum reps",
             "rangeMax": "Maximum reps",
             "rangeApply": "OK",
-            "rangeClear": "No rep range"
+            "rangeClear": "No rep range",
+            "renamePlaceholder": "Exercise name"
         }
     }
 }

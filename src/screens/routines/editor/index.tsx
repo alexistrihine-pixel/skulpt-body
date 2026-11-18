@@ -23,6 +23,7 @@ import {
     toRoutineDrafts,
 } from '@/crud/routine';
 import { useRoutine, useSaveRoutine, useStartRoutine } from '@/hooks/use-routines';
+import { useUpdateExercise } from '@/hooks/use-exercises';
 import { useRunningWorkoutStatic } from '@/hooks/use-running-workout';
 import { useRoutineDraftStore } from '@/stores/routine-draft';
 import { useRestSettingsStore } from '@/stores/rest-settings';
@@ -129,6 +130,19 @@ const styles = StyleSheet.create((theme, rt) => ({
         fontSize: theme.fontSize.lg.fontSize,
         fontWeight: theme.fontWeight.extrabold.fontWeight,
         color: theme.colors.typography,
+    },
+    exerciseNameInput: {
+        minHeight: theme.space(12),
+        paddingHorizontal: theme.space(3.5),
+        paddingVertical: theme.space(2),
+        textAlignVertical: 'center',
+        borderRadius: theme.radius.xl,
+        borderWidth: 2,
+        borderColor: theme.colors.surfaceRaised,
+        backgroundColor: theme.colors.background,
+        color: theme.colors.typography,
+        fontSize: theme.fontSize.lg.fontSize,
+        fontWeight: theme.fontWeight.extrabold.fontWeight,
     },
     restChip: (custom: boolean) => ({
         alignSelf: 'flex-start',
@@ -408,6 +422,7 @@ const RoutineEditorScreen: FC = () => {
     const { runningWorkout } = useRunningWorkoutStatic();
     const defaultRest = useRestSettingsStore((s) => s.defaultSeconds);
     const takePending = useRoutineDraftStore((s) => s.takePending);
+    const { mutateAsync: updateExercise } = useUpdateExercise();
 
     const [name, setName] = useState('');
     const [drafts, setDrafts] = useState<RoutineExerciseDraft[]>([]);
@@ -417,6 +432,8 @@ const RoutineEditorScreen: FC = () => {
     const [rangeFor, setRangeFor] = useState<string | null>(null);
     const [customMin, setCustomMin] = useState('');
     const [customMax, setCustomMax] = useState('');
+    // Edited exercise names (by exercise id), applied to the exercises on save.
+    const [names, setNames] = useState<Record<string, string>>({});
     const [busy, setBusy] = useState(false);
 
     // Copy the saved routine into the editable draft once, during render (no effect needed).
@@ -543,14 +560,32 @@ const RoutineEditorScreen: FC = () => {
     }, [confirmLeave]);
 
     const persist = useCallback(async () => {
+        // A renamed exercise is renamed everywhere (history, other routines, library).
+        const remap = new Map<string, string>();
+        for (const [exerciseId, value] of Object.entries(names)) {
+            const next = value.trim();
+            const current = exerciseMap.get(exerciseId);
+            if (!current || next.length === 0 || next === current.name) continue;
+            const updated = await updateExercise({ id: exerciseId, updates: { name: next } });
+            // A built-in exercise is copied on edit: point the routine at the copy.
+            if (updated && updated.id !== exerciseId) remap.set(exerciseId, updated.id);
+        }
+        const exercisesToSave =
+            remap.size > 0
+                ? drafts.map((d) => {
+                      const copyId = remap.get(d.exerciseId);
+                      return copyId ? { ...d, exerciseId: copyId } : d;
+                  })
+                : drafts;
         const id = await saveRoutine.mutateAsync({
             routineId: isNew ? null : routineId!,
             name,
-            exercises: drafts,
+            exercises: exercisesToSave,
         });
+        setNames({});
         setDirty(false);
         return id;
-    }, [saveRoutine, isNew, routineId, name, drafts]);
+    }, [names, exerciseMap, updateExercise, saveRoutine, isNew, routineId, name, drafts]);
 
     const handleSave = useCallback(async () => {
         if (busy) return;
@@ -672,9 +707,33 @@ const RoutineEditorScreen: FC = () => {
 
                     return (
                         <VStack key={draft.key} style={styles.card}>
+                            {info ? (
+                                <TextInput
+                                    value={names[info.id] ?? info.name}
+                                    onChangeText={(value) => {
+                                        // Multiline only to wrap long names: no line breaks.
+                                        const clean = value.replace(/\n/g, ' ');
+                                        setNames((prev) => ({ ...prev, [info.id]: clean }));
+                                        setDirty(true);
+                                    }}
+                                    multiline
+                                    submitBehavior="blurAndSubmit"
+                                    autoCapitalize="sentences"
+                                    returnKeyType="done"
+                                    placeholder={t('routines.editor.renamePlaceholder', {
+                                        ns: 'screens',
+                                    })}
+                                    placeholderTextColor={theme.colors.neutral[500]}
+                                    accessibilityLabel={t('routines.editor.renamePlaceholder', {
+                                        ns: 'screens',
+                                    })}
+                                    style={styles.exerciseNameInput}
+                                />
+                            ) : (
+                                <Text style={styles.exerciseName}>…</Text>
+                            )}
                             <HStack style={styles.cardHeader}>
                                 <VStack style={styles.cardTitleBlock}>
-                                    <Text style={styles.exerciseName}>{info?.name ?? '…'}</Text>
                                     <HStack style={styles.chips}>
                                         <Pressable onPress={() => setRestFor(draft.key)}>
                                             <HStack style={styles.restChip(custom)}>
