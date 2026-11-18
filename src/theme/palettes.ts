@@ -1,5 +1,5 @@
 // Dark colour palettes selectable in Settings > Theme (generated from the design canvases).
-// "graphite" is the validated default. Only the dark theme changes; the light theme stays as is.
+// "amethyst" is the default (unistyles.ts); "graphite" is the base for custom colours. Only the dark theme changes; the light theme stays as is.
 
 export const paletteIds = ['graphite', 'ocean', 'ember', 'amethyst', 'emerald', 'gold'] as const;
 export type PaletteId = (typeof paletteIds)[number];

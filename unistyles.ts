@@ -234,7 +234,7 @@ const lightTheme = {
     ...func,
 } as const;
 
-// Dark palette: "Graphite" (design validated 2026-11-16) by default, others selectable in
+// Dark palette: "Amethyst" (violet) by default since 2026-11-18, others selectable in
 // Settings > Theme. Each palette swaps the greys and the accent; the theme name stays 'dark'.
 const buildDarkTheme = (palette: Palette) => {
     const neutral = { ...colors.neutral, ...palette.neutral };
@@ -270,7 +270,7 @@ const CUSTOM_STORAGE_KEY = 'user.palette.custom';
 const getStoredPalette = (): PaletteChoice => {
     const stored = storage.getString(PALETTE_STORAGE_KEY);
     if (stored === 'custom') return 'custom';
-    return isPaletteId(stored) ? stored : 'graphite';
+    return isPaletteId(stored) ? stored : 'amethyst';
 };
 
 const getStoredCustomColors = (): CustomColors => {

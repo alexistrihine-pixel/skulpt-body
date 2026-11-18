@@ -1,5 +1,5 @@
 module.exports = {
-    name: process.env.APP_NAME || 'Skulpt',
+    name: process.env.APP_NAME || 'Skulpt Body',
     version: process.env.APP_VERSION || '1.0',
     owner: 'skulpt',
     slug: 'skulpt',
@@ -18,7 +18,7 @@ module.exports = {
         softwareKeyboardLayoutMode: 'pan',
         adaptiveIcon: {
             foregroundImage: './assets/images/adaptive-icon.png',
-            backgroundColor: '#a3e635',
+            backgroundColor: '#b49cff',
         },
         permissions: [
             'android.permission.health.WRITE_EXERCISE',
@@ -254,7 +254,7 @@ module.exports = {
                 image: './assets/images/splash-icon.png',
                 imageWidth: 125,
                 resizeMode: 'contain',
-                backgroundColor: '#a3e635',
+                backgroundColor: '#b49cff',
             },
         ],
         [

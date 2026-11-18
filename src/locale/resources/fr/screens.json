@@ -5,7 +5,7 @@
         "workoutsCount_one": "{{count}} séance",
         "workoutsCount_other": "{{count}} séances",
         "empty": {
-            "title": "Voici Skulpt",
+            "title": "Voici Skulpt Body",
             "description": "L'appli pour suivre tes séances simplement et efficacement.",
             "button": {
                 "title": "Planifier",
@@ -430,7 +430,7 @@
                     "title": "Couleurs",
                     "hint": "Couleurs de l'application en mode sombre.",
                     "hintLight": "S'applique au mode sombre (active « Sombre » au-dessus pour les voir).",
-                    "graphite": "Graphite (actuel)",
+                    "graphite": "Graphite",
                     "ocean": "Océan",
                     "ember": "Braise",
                     "amethyst": "Améthyste",

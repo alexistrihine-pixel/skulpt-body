@@ -5,7 +5,7 @@
         "workoutsCount_one": "{{count}} workout",
         "workoutsCount_other": "{{count}} workouts",
         "empty": {
-            "title": "This is Skulpt",
+            "title": "This is Skulpt Body",
             "description": "App for easy and efficient workout tracking.",
             "button": {
                 "title": "Plan",
@@ -430,7 +430,7 @@
                     "title": "Colors",
                     "hint": "App colors in dark mode.",
                     "hintLight": "Applies to dark mode (pick “Dark” above to see them).",
-                    "graphite": "Graphite (default)",
+                    "graphite": "Graphite",
                     "ocean": "Ocean",
                     "ember": "Ember",
                     "amethyst": "Amethyst",
