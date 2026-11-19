@@ -1,0 +1,17 @@
+diff --git a/android/src/main/java/expo/modules/notifications/notifications/presentation/builders/ExpoNotificationBuilder.kt b/android/src/main/java/expo/modules/notifications/notifications/presentation/builders/ExpoNotificationBuilder.kt
+index 610d3039cefd589647538ad8ba14587d29fab338..e95acd44a145f3b56ac25d6645a35264bada200a 100644
+--- a/android/src/main/java/expo/modules/notifications/notifications/presentation/builders/ExpoNotificationBuilder.kt
++++ b/android/src/main/java/expo/modules/notifications/notifications/presentation/builders/ExpoNotificationBuilder.kt
+@@ -100,6 +100,12 @@ open class ExpoNotificationBuilder(
+     builder.setAutoCancel(content.isAutoDismiss)
+     builder.setOngoing(content.isSticky)
+ 
++    // Skulpt fork: data.timeoutAfterMs removes the notification by itself after that delay
++    // (used for rest/work timer alerts so they don't pile up in the shade).
++    content.body?.optLong("timeoutAfterMs", 0L)?.takeIf { it > 0L }?.let {
++      builder.setTimeoutAfter(it)
++    }
++
+     // see "Notification anatomy" https://developer.android.com/develop/ui/views/notifications#Templates
+     builder.setContentTitle(content.title)
+     builder.setContentText(content.text)

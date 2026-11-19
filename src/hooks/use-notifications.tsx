@@ -55,6 +55,29 @@ const NOTIFICATION_CHANNEL_CONFIG = {
 
 const WORKOUT_TIMER_DATE_TRIGGER_MIN_LEAD_MS = 1000;
 
+// Android: rest/work timer alerts remove themselves after this delay (patched
+// expo-notifications reads data.timeoutAfterMs), so they don't pile up in the shade.
+const WORKOUT_TIMER_NOTIFICATION_TIMEOUT_MS = 60 * 1000;
+
+const isWorkoutTimerNotification = (notification: Notifications.Notification): boolean => {
+    const data = notification.request.content.data as unknown;
+    const kind =
+        data && typeof data === 'object' && 'kind' in data
+            ? (data as { kind?: unknown }).kind
+            : undefined;
+    return kind === 'rest-timer' || kind === 'work-timer';
+};
+
+// Clears the timer alerts already shown (e.g. when the user comes back to the app).
+const dismissPresentedWorkoutTimerNotifications = async () => {
+    const presented = await Notifications.getPresentedNotificationsAsync();
+    await Promise.all(
+        presented
+            .filter(isWorkoutTimerNotification)
+            .map((n) => Notifications.dismissNotificationAsync(n.request.identifier)),
+    );
+};
+
 const isMissingFcmConfigurationError = (error: unknown): boolean => {
     if (!(error instanceof Error)) {
         return false;
@@ -430,6 +453,10 @@ const useNotificationsProvider = () => {
             setAppState(nextAppState);
             if (nextAppState === 'active' && appState !== 'active') {
                 runInBackground(
+                    dismissPresentedWorkoutTimerNotifications,
+                    'Failed to dismiss workout timer notifications on app resume:',
+                );
+                runInBackground(
                     checkPermissions,
                     'Failed to refresh notification permissions on app resume:',
                 );
@@ -542,9 +569,11 @@ const useNotificationsProvider = () => {
                     body: args.message.body,
                     sound: Platform.OS === 'ios' ? IOS_TIMER_END_NOTIFICATION_SOUND : undefined,
                     vibrate: [0, 250, 250, 250],
-                    data: args.deepLinkUrl
-                        ? { url: args.deepLinkUrl, kind: args.kind }
-                        : { kind: args.kind },
+                    data: {
+                        ...(args.deepLinkUrl ? { url: args.deepLinkUrl } : {}),
+                        kind: args.kind,
+                        timeoutAfterMs: WORKOUT_TIMER_NOTIFICATION_TIMEOUT_MS,
+                    },
                     ...(Platform.OS === 'android' && {
                         channelId: args.kind,
                     }),

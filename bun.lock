@@ -118,6 +118,7 @@
   ],
   "patchedDependencies": {
     "@bacons/xcode@1.0.0-alpha.32": "patches/@bacons%2Fxcode@1.0.0-alpha.32.patch",
+    "expo-notifications@57.0.8": "patches/expo-notifications@57.0.8.patch",
   },
   "overrides": {
     "zod-validation-error": "4.0.2",

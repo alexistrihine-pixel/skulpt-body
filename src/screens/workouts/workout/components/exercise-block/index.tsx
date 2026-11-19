@@ -67,6 +67,10 @@ const styles = StyleSheet.create((theme) => ({
         width: theme.space(11),
         height: theme.space(11),
         borderWidth: 0,
+        // PreviewThumbnail adds a right margin and square corners by default:
+        // inside the round "current" ring they made the ring an off-centre oval.
+        marginRight: 0,
+        borderRadius: theme.radius.full,
     },
     thumbPlaceholder: {
         width: theme.space(11),

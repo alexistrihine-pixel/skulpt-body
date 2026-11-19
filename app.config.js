@@ -32,6 +32,9 @@ module.exports = {
             'android.permission.health.READ_LEAN_BODY_MASS',
             'android.permission.health.READ_BONE_MASS',
             'android.permission.health.READ_BODY_WATER_MASS',
+            // Exact alarms: rest-timer notifications fire on time instead of up to ~1 min late.
+            'android.permission.USE_EXACT_ALARM',
+            'android.permission.SCHEDULE_EXACT_ALARM',
         ],
     },
     ios: {
