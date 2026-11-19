@@ -64,6 +64,11 @@ import { reportError, runInBackground } from '@/services/error-reporting';
 import { usePostWorkoutAppReviewPrompt } from '@/hooks/use-app-review-prompt';
 import { useAnalytics } from '@/hooks/use-analytics';
 import { resolveRestTime } from '@/stores/rest-settings';
+import {
+    hideRestTimerLive,
+    isRestTimerLiveAvailable,
+    showRestTimerLive,
+} from '../../modules/rest-timer-live';
 
 type ProviderReturn = ReturnType<typeof useRunningWorkoutProvider>;
 
@@ -648,6 +653,9 @@ const useRunningWorkoutProvider = () => {
 
     useEffect(() => {
         // Foreground-only sound. Background rest alerts are delivered by scheduled notifications.
+        // On Android the live rest notification (rest-timer-live) plays the beep instead,
+        // in the foreground and in the background.
+        if (isRestTimerLiveAvailable) return;
         if (isAppInBackground) return;
         if (isTrackingOnWatch) return;
 
@@ -1579,6 +1587,81 @@ const useRunningWorkoutProvider = () => {
             sub?.remove();
         };
     }, [enqueueWatchCommand, runningWorkout?.id, trackWatchWorkoutStart]);
+
+    // --- Android: live rest countdown in the notification shade + background beep ---
+    const restLiveKeyRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (!isRestTimerLiveAvailable) return;
+
+        const restingSet = runningWorkoutRestingSet;
+        const completedAtMs = restingSet?.completedAt
+            ? new Date(restingSet.completedAt as unknown as string | number | Date).getTime()
+            : NaN;
+        const restSeconds = restingSet?.restTime ?? 0;
+        const endAtMs = completedAtMs + restSeconds * 1000;
+        const isResting =
+            !!runningWorkout &&
+            !isTrackingOnWatch &&
+            restSeconds > 0 &&
+            Number.isFinite(endAtMs) &&
+            endAtMs > Date.now();
+
+        if (!isResting) {
+            if (restLiveKeyRef.current !== null) {
+                restLiveKeyRef.current = null;
+                hideRestTimerLive();
+            }
+            return;
+        }
+
+        const title = t('training.restBar.title', { ns: 'screens' });
+        let body: string | undefined;
+        const nextSet = runningWorkoutNextSet;
+        if (nextSet && workoutDetails) {
+            const exDetails = workoutDetails.exercises.find((x) =>
+                x.sets.some((s) => s.id === nextSet.id),
+            );
+            if (exDetails) {
+                const setTypeShort = t(`setTypeShort.${normalizeSetType(nextSet.type)}`, {
+                    ns: 'common',
+                });
+                body = t('pushes.workouts.work.body', {
+                    ns: 'common',
+                    exerciseName: exDetails.exercise.name,
+                    setNumber: `${(nextSet.order ?? 0) + 1}${setTypeShort}`,
+                    setTracking: formatSet(exDetails.exercise, nextSet),
+                });
+            }
+        }
+
+        const playSounds = user?.playSounds ?? false;
+        const volume = Math.min(1, Math.max(0, (user?.soundsVolume ?? 100) / 100));
+        const soundAtMs = playSounds ? endAtMs - TIMER_WARNING_SECONDS * 1000 : 0;
+
+        const key = `${restingSet!.id}:${endAtMs}:${body ?? ''}:${soundAtMs}:${volume}`;
+        if (restLiveKeyRef.current === key) return;
+        restLiveKeyRef.current = key;
+
+        try {
+            showRestTimerLive({ endAtMs, title, body, soundAtMs, volume });
+        } catch (error) {
+            reportError(error, 'Failed to show live rest notification:');
+        }
+    }, [
+        isTrackingOnWatch,
+        runningWorkout,
+        runningWorkoutNextSet,
+        runningWorkoutRestingSet,
+        t,
+        user?.playSounds,
+        user?.soundsVolume,
+        workoutDetails,
+    ]);
+
+    useEffect(() => {
+        if (!isRestTimerLiveAvailable) return;
+        return () => hideRestTimerLive();
+    }, []);
 
     useEffect(() => {
         const sub = workoutCommandManagerRef.current.onCommand(enqueueWorkoutCommand);

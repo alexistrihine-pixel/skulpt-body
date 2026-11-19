@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Android 16+: lets the rest countdown show as a Live Update (status bar chip). -->
+  <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+
+  <application>
+    <receiver
+      android:name="expo.modules.resttimerlive.RestTimerSoundReceiver"
+      android:exported="false" />
+  </application>
+</manifest>
