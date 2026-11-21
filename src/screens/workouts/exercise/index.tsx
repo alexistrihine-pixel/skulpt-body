@@ -16,6 +16,7 @@ import Spinner from '@/components/feedback/spinner';
 import {
     useCompleteExerciseSet,
     usePreviousExerciseSets,
+    useUncompleteExerciseSet,
     useUpdateExerciseSet,
     useWorkoutWithDetails,
 } from '@/hooks/use-workouts';
@@ -164,6 +165,7 @@ const WorkoutExerciseScreen: FC = () => {
 
     const { mutateAsync: updateSet } = useUpdateExerciseSet();
     const { mutateAsync: completeSet } = useCompleteExerciseSet();
+    const { mutate: uncompleteSet } = useUncompleteExerciseSet();
     const { t } = useTranslation(['screens']);
     const keypadTarget = useKeypadStore((s) => s.target);
     const keypadHeight = useKeypadStore((s) => s.height);
@@ -410,6 +412,13 @@ const WorkoutExerciseScreen: FC = () => {
         [handleCompleteFromKeypad],
     );
 
+    // Tapping ✓ again on a set validated by mistake un-checks it (running workout only).
+    const isRunning = workoutDetails?.workout.status === 'in_progress';
+    const handleUncompleteFromRow = useCallback(
+        (setId: string) => uncompleteSet(setId),
+        [uncompleteSet],
+    );
+
     const getSetLabel = useCallback(
         (setId: string) => {
             const index = localItems.findIndex((it) => it.id === setId);
@@ -521,6 +530,9 @@ const WorkoutExerciseScreen: FC = () => {
                                         label={setLabels[index] ?? String(index + 1)}
                                         canComplete={canCompleteSet(item.id)}
                                         onComplete={handleCompleteFromRow}
+                                        onUncomplete={
+                                            isRunning ? handleUncompleteFromRow : undefined
+                                        }
                                     />
                                 )}
                             />

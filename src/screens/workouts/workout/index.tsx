@@ -333,7 +333,8 @@ const WorkoutScreen: FC = () => {
     const { t } = useTranslation(['screens']);
     const { theme } = useUnistyles();
     const { mutateAsync: updateSet } = useUpdateExerciseSet();
-    const { canCompleteSet, completeFromList } = useSetCompletion(workoutDetails);
+    const { canCompleteSet, completeFromList, uncompleteFromList } =
+        useSetCompletion(workoutDetails);
     const keypadTarget = useKeypadStore((st) => st.target);
     const keypadHeight = useKeypadStore((st) => st.height);
     const keypadOpen = keypadTarget !== null;
@@ -437,6 +438,15 @@ const WorkoutScreen: FC = () => {
         () => new Map((workoutDetails?.exercises ?? []).map((e) => [e.workoutExercise.id, e])),
         [workoutDetails],
     );
+
+    // Only the block holding a timed set in progress needs the per-second clock; the others get
+    // stable values so they don't re-render every second (battery).
+    const tickingExerciseId = useMemo(() => {
+        const id = runningWorkoutActiveSet?.workoutExerciseId;
+        if (!id) return null;
+        const tracking = detailsById.get(id)?.exercise.tracking;
+        return Array.isArray(tracking) && tracking.includes('time') ? id : null;
+    }, [runningWorkoutActiveSet?.workoutExerciseId, detailsById]);
 
     const sortedSetsById = useMemo(() => {
         const map = new Map<string, ExerciseSetSelect[]>();
@@ -789,17 +799,22 @@ const WorkoutScreen: FC = () => {
                                         sets={sortedSetsById.get(item.id) ?? []}
                                         isCurrent={item.id === currentExerciseId}
                                         isSuperset={!!item.groupId && item.groupType !== 'single'}
-                                        nowMs={nowMs}
+                                        nowMs={item.id === tickingExerciseId ? nowMs : 0}
                                         activeSetId={runningWorkoutActiveSet?.id ?? null}
                                         restingSetId={runningWorkoutRestingSet?.id ?? null}
                                         activeWorkTimerRemainingSeconds={
-                                            activeWorkTimerRemainingSeconds ?? null
+                                            item.id === tickingExerciseId
+                                                ? (activeWorkTimerRemainingSeconds ?? null)
+                                                : null
                                         }
                                         activeStopwatchElapsedSeconds={
-                                            activeStopwatchElapsedSeconds ?? null
+                                            item.id === tickingExerciseId
+                                                ? (activeStopwatchElapsedSeconds ?? null)
+                                                : null
                                         }
                                         canCompleteSet={canCompleteSet}
                                         onCompleteSet={handleCompleteSet}
+                                        onUncompleteSet={uncompleteFromList}
                                     />
                                 );
                             }

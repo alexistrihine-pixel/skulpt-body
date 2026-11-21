@@ -655,6 +655,81 @@ export const updateExerciseSet = async (
     }
 };
 
+/**
+ * Un-checks a set validated by mistake in a running workout: it goes back to "to do" (values
+ * are kept, its rest is dropped). `updateExerciseSet` can't do this, it never touches
+ * completedAt/startedAt of a completed set. A weight/reps set started automatically after a rest
+ * is put back to "not started" too, so no set is in progress and any set can be checked again.
+ */
+export const uncompleteExerciseSet = async (id: string): Promise<ExerciseSetSelect | null> => {
+    try {
+        const existing = await getExerciseSetById(id);
+        if (!existing || !existing.completedAt) return existing;
+
+        const rows = await db
+            .select({ workoutId: workout.id, status: workout.status })
+            .from(workoutExercise)
+            .innerJoin(workout, eq(workoutExercise.workoutId, workout.id))
+            .where(eq(workoutExercise.id, existing.workoutExerciseId))
+            .limit(1);
+        const parent = rows[0];
+        if (!parent || parent.status !== 'in_progress') return existing;
+
+        const inProgress = await db
+            .select({ id: exerciseSet.id, tracking: exercise.tracking })
+            .from(exerciseSet)
+            .innerJoin(workoutExercise, eq(exerciseSet.workoutExerciseId, workoutExercise.id))
+            .innerJoin(exercise, eq(workoutExercise.exerciseId, exercise.id))
+            .where(
+                and(
+                    eq(workoutExercise.workoutId, parent.workoutId),
+                    sql`${exerciseSet.startedAt} IS NOT NULL`,
+                    sql`${exerciseSet.completedAt} IS NULL`,
+                ),
+            );
+        for (const other of inProgress) {
+            const tracking = Array.isArray(other.tracking) ? (other.tracking as string[]) : [];
+            if (other.id === id || tracking.includes('time')) continue;
+            await withSync(
+                'exercise_set',
+                'update',
+                async () => {
+                    await db
+                        .update(exerciseSet)
+                        .set({ startedAt: null })
+                        .where(eq(exerciseSet.id, other.id));
+                    return db
+                        .select()
+                        .from(exerciseSet)
+                        .where(eq(exerciseSet.id, other.id))
+                        .limit(1);
+                },
+                other.id,
+            );
+        }
+
+        return await withSync(
+            'exercise_set',
+            'update',
+            async () => {
+                await db
+                    .update(exerciseSet)
+                    .set({
+                        completedAt: null,
+                        startedAt: null,
+                        restCompletedAt: null,
+                        finalRestTime: null,
+                    })
+                    .where(eq(exerciseSet.id, id));
+                return db.select().from(exerciseSet).where(eq(exerciseSet.id, id)).limit(1);
+            },
+            id,
+        ).then((row) => normalizeExerciseSetRecord(row));
+    } catch (error) {
+        handleCrudError('update', 'exercise_set', error);
+    }
+};
+
 export const deleteExerciseSet = async (id: string): Promise<void> => {
     try {
         const toDelete = await db.select().from(exerciseSet).where(eq(exerciseSet.id, id)).limit(1);

@@ -6,6 +6,7 @@ import { getExerciseSetById } from '@/crud/exercise';
 import { getPreviousExerciseSets } from '@/crud/workout/previous';
 import {
     useCompleteExerciseSet,
+    useUncompleteExerciseSet,
     useUpdateExerciseSet,
     useWorkoutWithDetails,
 } from '@/hooks/use-workouts';
@@ -28,6 +29,7 @@ export const useSetCompletion = (workoutDetails: WorkoutDetails) => {
     const queryClient = useQueryClient();
     const { mutateAsync: updateSet } = useUpdateExerciseSet();
     const { mutateAsync: completeSet } = useCompleteExerciseSet();
+    const { mutate: uncompleteSet } = useUncompleteExerciseSet();
     const { runningWorkoutActiveSet, runningWorkoutRestingSet } = useRunningWorkoutTicker();
 
     const canCompleteSet = useCallback(
@@ -125,5 +127,18 @@ export const useSetCompletion = (workoutDetails: WorkoutDetails) => {
         ],
     );
 
-    return { canCompleteSet, completeFromList };
+    // Tapping ✓ again on a set validated by mistake un-checks it (running workout only).
+    const isRunning = workoutDetails?.workout.status === 'in_progress';
+    const uncompleteFromList = useCallback(
+        (setId: string) => {
+            uncompleteSet(setId);
+        },
+        [uncompleteSet],
+    );
+
+    return {
+        canCompleteSet,
+        completeFromList,
+        uncompleteFromList: isRunning ? uncompleteFromList : undefined,
+    };
 };

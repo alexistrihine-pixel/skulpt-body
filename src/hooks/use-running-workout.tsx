@@ -125,6 +125,8 @@ const parseWatchTrackingValue = (
     return Math.round(nonNegative * 100) / 100;
 };
 
+const KEEP_AWAKE_TAG = 'running-workout';
+
 const staticContext = createContext<RunningWorkoutStaticContextType>(
     {} as RunningWorkoutStaticContextType,
 );
@@ -294,13 +296,16 @@ const useRunningWorkoutProvider = () => {
         });
     }, [track]);
 
+    // "Verrouillage auto" keeps the screen on only while a workout is running (it used to stay on
+    // whenever the app was open, which drained the battery).
+    const keepScreenOn = !!user?.screenAutoLock && !!data[0]?.id;
     useEffect(() => {
         const updateScreenLock = async () => {
             try {
-                if (user?.screenAutoLock) {
-                    await activateKeepAwakeAsync();
+                if (keepScreenOn) {
+                    await activateKeepAwakeAsync(KEEP_AWAKE_TAG);
                 } else {
-                    deactivateKeepAwake();
+                    await deactivateKeepAwake(KEEP_AWAKE_TAG);
                 }
             } catch (error) {
                 reportError(error, 'Failed to update screen keep awake:');
@@ -308,7 +313,7 @@ const useRunningWorkoutProvider = () => {
         };
 
         runInBackground(updateScreenLock, 'Failed to update screen keep awake:');
-    }, [user?.screenAutoLock]);
+    }, [keepScreenOn]);
 
     const runningWorkout = useMemo(() => {
         if (data && data.length > 0) {

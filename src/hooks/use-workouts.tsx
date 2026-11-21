@@ -58,6 +58,7 @@ import {
     getExerciseSetById,
     getExerciseSets,
     updateExerciseSet,
+    uncompleteExerciseSet,
 } from '@/crud/exercise';
 import { getPrimaryAnchorMuscleValue } from '@/constants/muscles';
 import { getWorkoutOverviewExerciseMetaRows } from '@/crud/workout/home';
@@ -621,6 +622,20 @@ export const useUpdateExerciseSet = () => {
             updateExerciseSet(id, updates),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['exercise-sets', data.workoutExerciseId] });
+            queryClient.invalidateQueries({ queryKey: ['workout-details'] });
+            invalidateWorkoutSetDerivedQueries(queryClient);
+        },
+    });
+};
+
+/** Un-checks a set validated by mistake (running workout only), see uncompleteExerciseSet. */
+export const useUncompleteExerciseSet = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) => uncompleteExerciseSet(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['exercise-sets'] });
             queryClient.invalidateQueries({ queryKey: ['workout-details'] });
             invalidateWorkoutSetDerivedQueries(queryClient);
         },

@@ -60,6 +60,8 @@ interface SetItemProps {
     previousSet?: ExerciseSetSelect | null;
     canComplete: boolean;
     onComplete: (setId: string) => void;
+    /** Given while the workout runs: tapping ✓ on a validated set un-checks it. */
+    onUncomplete?: (setId: string) => void;
 }
 
 interface RightActionProps {
@@ -191,6 +193,7 @@ const SetItemComponent = ({
     previousSet,
     canComplete,
     onComplete,
+    onUncomplete,
 }: SetItemProps) => {
     const { t } = useTranslation(['common', 'screens']);
     const { theme } = useUnistyles();
@@ -230,10 +233,15 @@ const SetItemComponent = ({
         });
     }, [actionsOpen, set.id, set.type, set.workoutExerciseId]);
 
+    const canUncomplete = isCompleted && !!onUncomplete;
     const handleComplete = useCallback(() => {
-        if (isCompleted || !canComplete) return;
+        if (isCompleted) {
+            onUncomplete?.(set.id);
+            return;
+        }
+        if (!canComplete) return;
         onComplete(set.id);
-    }, [canComplete, isCompleted, onComplete, set.id]);
+    }, [canComplete, isCompleted, onComplete, onUncomplete, set.id]);
 
     const fields = useMemo(() => getSetFields(exerciseInfo?.exercise), [exerciseInfo?.exercise]);
     const timeOptions = exerciseInfo?.exercise?.timeOptions ?? 'log';
@@ -381,9 +389,12 @@ const SetItemComponent = ({
                     {fields.map(renderField)}
                     <Pressable
                         onPress={handleComplete}
-                        disabled={isCompleted || !canComplete}
+                        disabled={isCompleted ? !canUncomplete : !canComplete}
                         accessibilityRole="button"
-                        accessibilityState={{ checked: isCompleted, disabled: !canComplete }}
+                        accessibilityState={{
+                            checked: isCompleted,
+                            disabled: isCompleted ? !canUncomplete : !canComplete,
+                        }}
                         accessibilityLabel={
                             isCompleted
                                 ? t('training.setDone', { ns: 'screens', number: index + 1 })
@@ -420,6 +431,7 @@ export const SetItem = memo(SetItemComponent, (prev, next) => {
     if (prev.previousSet !== next.previousSet) return false;
     if (prev.canComplete !== next.canComplete) return false;
     if (prev.onComplete !== next.onComplete) return false;
+    if (prev.onUncomplete !== next.onUncomplete) return false;
 
     const prevIsTimeSensitive =
         prev.set.id === prev.activeSetId || prev.set.id === prev.restingSetId;

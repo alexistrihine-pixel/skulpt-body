@@ -45,6 +45,7 @@ interface ExerciseBlockProps {
     activeStopwatchElapsedSeconds: number | null;
     canCompleteSet: (setId: string) => boolean;
     onCompleteSet: (setId: string) => void;
+    onUncompleteSet?: (setId: string) => void;
 }
 
 const styles = StyleSheet.create((theme) => ({
@@ -183,6 +184,7 @@ const ExerciseBlockComponent: FC<ExerciseBlockProps> = ({
     activeStopwatchElapsedSeconds,
     canCompleteSet,
     onCompleteSet,
+    onUncompleteSet,
 }) => {
     const { t } = useTranslation(['common', 'screens']);
     const { theme } = useUnistyles();
@@ -359,6 +361,7 @@ const ExerciseBlockComponent: FC<ExerciseBlockProps> = ({
                         previousSet={previousSets?.[index] ?? null}
                         canComplete={canCompleteSet(set.id)}
                         onComplete={onCompleteSet}
+                        onUncomplete={onUncompleteSet}
                     />
                 ))}
                 <Pressable onPress={handleAddSet} disabled={isAddingSet}>
