@@ -20,6 +20,7 @@ object RestTimerLive {
   private const val NOTIFICATION_ID = 41071
   private const val SOUND_REQUEST_CODE = 41072
   internal const val EXTRA_VOLUME = "volume"
+  internal const val EXTRA_END_AT_MS = "endAtMs"
   private const val EXTRA_REQUEST_PROMOTED_ONGOING = "android.requestPromotedOngoing"
 
   fun show(
@@ -31,6 +32,10 @@ object RestTimerLive {
     volume: Float,
     color: Int,
   ) {
+    // A countdown beep already playing for another end (+15 / -15 pressed while it is heard)
+    // would otherwise keep counting down to the old end.
+    RestTimerSoundReceiver.stopIfStale(endAtMs)
+
     val now = System.currentTimeMillis()
     if (endAtMs <= now) {
       hide(context)
@@ -66,12 +71,14 @@ object RestTimerLive {
     launchIntent(context)?.let { builder.setContentIntent(it) }
 
     manager.notify(NOTIFICATION_ID, builder.build())
-    scheduleSound(context, soundAtMs, volume)
+    scheduleSound(context, soundAtMs, endAtMs, volume)
   }
 
   fun hide(context: Context) {
+    // Rest skipped: cut the beep short (one ending with the rest is left to finish).
+    RestTimerSoundReceiver.stopIfStale(null)
     context.getSystemService(NotificationManager::class.java).cancel(NOTIFICATION_ID)
-    context.getSystemService(AlarmManager::class.java).cancel(soundIntent(context, 1f))
+    context.getSystemService(AlarmManager::class.java).cancel(soundIntent(context, 0L, 1f))
   }
 
   private fun ensureChannel(manager: NotificationManager) {
@@ -89,9 +96,9 @@ object RestTimerLive {
     manager.createNotificationChannel(channel)
   }
 
-  private fun scheduleSound(context: Context, soundAtMs: Long, volume: Float) {
+  private fun scheduleSound(context: Context, soundAtMs: Long, endAtMs: Long, volume: Float) {
     val alarms = context.getSystemService(AlarmManager::class.java)
-    val intent = soundIntent(context, volume)
+    val intent = soundIntent(context, endAtMs, volume)
     alarms.cancel(intent)
     if (soundAtMs <= System.currentTimeMillis()) return
 
@@ -103,9 +110,10 @@ object RestTimerLive {
     }
   }
 
-  private fun soundIntent(context: Context, volume: Float): PendingIntent {
+  private fun soundIntent(context: Context, endAtMs: Long, volume: Float): PendingIntent {
     val intent = Intent(context, RestTimerSoundReceiver::class.java)
       .putExtra(EXTRA_VOLUME, volume)
+      .putExtra(EXTRA_END_AT_MS, endAtMs)
     return PendingIntent.getBroadcast(
       context,
       SOUND_REQUEST_CODE,

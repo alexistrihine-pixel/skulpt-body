@@ -1,5 +1,5 @@
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BackHandler, Modal, Pressable as RNPressable, TextInput } from 'react-native';
+import { BackHandler, Keyboard, Modal, Pressable as RNPressable, TextInput } from 'react-native';
 import { appAlert } from '@/stores/dialog';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useTranslation } from 'react-i18next';
@@ -256,6 +256,17 @@ const styles = StyleSheet.create((theme, rt) => ({
         fontWeight: theme.fontWeight.semibold.fontWeight,
         paddingVertical: 0,
     },
+    repsCell: {
+        // Same Pressable as the dashed range cell: Android keeps the dash unless it's reset.
+        borderStyle: 'solid',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    repsCellText: {
+        color: theme.colors.typography,
+        fontSize: theme.fontSize.default.fontSize,
+        fontWeight: theme.fontWeight.semibold.fontWeight,
+    },
     addSet: {
         height: theme.space(10),
         borderRadius: theme.radius.full,
@@ -365,10 +376,12 @@ type NumberCellProps = {
     onChange: (value: number | null) => void;
     style: object;
     accessibilityLabel: string;
+    autoFocus?: boolean;
+    onBlur?: () => void;
 };
 
 const NumberCell: FC<NumberCellProps> = memo(
-    ({ value, decimal, onChange, style, accessibilityLabel }) => {
+    ({ value, decimal, onChange, style, accessibilityLabel, autoFocus, onBlur }) => {
         const [text, setText] = useState(formatNumber(value));
         const lastValue = useRef(value);
 
@@ -395,6 +408,8 @@ const NumberCell: FC<NumberCellProps> = memo(
                 onChangeText={handleChange}
                 keyboardType={decimal ? 'decimal-pad' : 'number-pad'}
                 selectTextOnFocus
+                autoFocus={autoFocus}
+                onBlur={onBlur}
                 style={style}
                 accessibilityLabel={accessibilityLabel}
             />
@@ -430,6 +445,15 @@ const RoutineEditorScreen: FC = () => {
     const [dirty, setDirty] = useState(false);
     const [restFor, setRestFor] = useState<string | null>(null);
     const [rangeFor, setRangeFor] = useState<string | null>(null);
+    // Set whose reps cell opened the range sheet, and the set being typed as exact reps.
+    const [rangeSetKey, setRangeSetKey] = useState<string | null>(null);
+    const [exactFor, setExactFor] = useState<string | null>(null);
+    // Closing the keyboard with Back doesn't blur the input on Android: end the typing there too.
+    useEffect(() => {
+        if (!exactFor) return;
+        const sub = Keyboard.addListener('keyboardDidHide', () => setExactFor(null));
+        return () => sub.remove();
+    }, [exactFor]);
     const [customMin, setCustomMin] = useState('');
     const [customMax, setCustomMax] = useState('');
     // Edited exercise names (by exercise id), applied to the exercises on save.
@@ -626,10 +650,19 @@ const RoutineEditorScreen: FC = () => {
         ? (exerciseMap.get(rangeDraft.exerciseId)?.name ?? '')
         : '';
 
-    const openRange = (draft: RoutineExerciseDraft) => {
+    const openRange = (draft: RoutineExerciseDraft, setKey: string | null = null) => {
         setCustomMin(draft.repMin != null ? String(draft.repMin) : '');
         setCustomMax(draft.repMax != null ? String(draft.repMax) : '');
+        setRangeSetKey(setKey);
         setRangeFor(draft.key);
+    };
+
+    // "Exact reps": drop the range and open the keyboard on the reps cell that was tapped
+    // (after the sheet has faded out, otherwise Android doesn't show the keyboard).
+    const chooseExactReps = () => {
+        const setKey = rangeSetKey;
+        applyRange(null, null);
+        if (setKey) setTimeout(() => setExactFor(setKey), 300);
     };
 
     const applyRange = (min: number | null, max: number | null) => {
@@ -871,14 +904,36 @@ const RoutineEditorScreen: FC = () => {
                                         {range && followsRange(set) ? (
                                             <Pressable
                                                 style={[styles.rangeCell, styles.colReps]}
-                                                onPress={() => openRange(draft)}
+                                                onPress={() => openRange(draft, set.key)}
                                             >
                                                 <Text style={styles.rangeCellText}>{range}</Text>
+                                            </Pressable>
+                                        ) : followsRange(set) && exactFor !== set.key ? (
+                                            // No range: the tap opens the same sheet (range or
+                                            // exact reps) instead of going straight to the keyboard.
+                                            <Pressable
+                                                style={[
+                                                    styles.cell,
+                                                    styles.colReps,
+                                                    styles.repsCell,
+                                                ]}
+                                                onPress={() => openRange(draft, set.key)}
+                                                accessibilityLabel={`${t('routines.editor.reps', { ns: 'screens' })} ${setIndex + 1}`}
+                                            >
+                                                <Text style={styles.repsCellText}>
+                                                    {formatNumber(set.reps)}
+                                                </Text>
                                             </Pressable>
                                         ) : (
                                             <NumberCell
                                                 value={set.reps}
                                                 decimal={false}
+                                                autoFocus={exactFor === set.key}
+                                                onBlur={
+                                                    exactFor === set.key
+                                                        ? () => setExactFor(null)
+                                                        : undefined
+                                                }
                                                 style={[styles.cell, styles.colReps]}
                                                 accessibilityLabel={`${t('routines.editor.reps', { ns: 'screens' })} ${setIndex + 1}`}
                                                 onChange={(value) =>
@@ -1102,9 +1157,15 @@ const RoutineEditorScreen: FC = () => {
                                 </Text>
                             </Pressable>
                         </HStack>
-                        <Pressable style={styles.addSet} onPress={() => applyRange(null, null)}>
+                        <Pressable style={styles.addSet} onPress={chooseExactReps}>
                             <Text style={styles.addSetText}>
-                                {t('routines.editor.rangeClear', { ns: 'screens' })}
+                                {t(
+                                    rangeDraft &&
+                                        formatRepRange(rangeDraft.repMin, rangeDraft.repMax)
+                                        ? 'routines.editor.rangeClear'
+                                        : 'routines.editor.rangeExact',
+                                    { ns: 'screens' },
+                                )}
                             </Text>
                         </Pressable>
                     </RNPressable>

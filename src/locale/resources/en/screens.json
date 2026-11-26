@@ -730,6 +730,7 @@
             "rangeMax": "Maximum reps",
             "rangeApply": "OK",
             "rangeClear": "No rep range",
+            "rangeExact": "Enter exact reps",
             "renamePlaceholder": "Exercise name"
         }
     }

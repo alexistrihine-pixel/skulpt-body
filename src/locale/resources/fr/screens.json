@@ -730,6 +730,7 @@
             "rangeMax": "Maximum de reps",
             "rangeApply": "OK",
             "rangeClear": "Pas de fourchette",
+            "rangeExact": "Saisir un nombre exact de reps",
             "renamePlaceholder": "Nom de l'exercice"
         }
     }
